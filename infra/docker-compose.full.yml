@@ -1,0 +1,7 @@
+services:
+  api:
+    environment:
+      DATABASE_URL: postgresql+psycopg://rekha:rekha@postgres:5432/rekha
+    depends_on:
+      postgres:
+        condition: service_started

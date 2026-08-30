@@ -1,0 +1,212 @@
+version: "2026.08.26-1"
+timezone: Asia/Kolkata
+default_effect: ALLOW
+rules:
+  - id: MAC_ABSOLUTE_STOP
+    description: Mastercard MAC 03 / MAC 21. Network-authoritative stop. Overrides every retry rule.
+    applies_to: ["*"]
+    when: {mac_forbidden: {eq: true}}
+    effect: DENY
+    reason_code: MAC_DO_NOT_RETRY
+    overridable: false
+
+  - id: HARD_DNC
+    description: NACH 60/69 (deceased, insolvent) and U16_* NPCI risk blocks. No contact, no retry, ever.
+    applies_to: ["*"]
+    when: {hard_dnc: {eq: true}}
+    effect: DENY
+    reason_code: HARD_DO_NOT_CONTACT
+    overridable: false
+
+  - id: CONSENT_REVOKED
+    description: Customer withdrew recovery consent
+    applies_to: [sms, whatsapp, email, voice, send_template_message]
+    when: {consent_status: {eq: REVOKED}}
+    effect: DENY
+    reason_code: CONSENT_REVOKED
+    overridable: false
+
+  - id: CONSENT_UNKNOWN
+    description: Fail-closed. consent state not on file means no lawful basis to contact
+    applies_to: [sms, whatsapp, email, voice, send_template_message]
+    when: {consent_status: {eq: UNKNOWN}}
+    effect: DENY
+    reason_code: CONSENT_NOT_ON_FILE
+    overridable: false
+
+  - id: DND_SUPPRESSED
+    description: On global suppression / DND / legal hold
+    applies_to: [sms, whatsapp, email, voice, send_template_message]
+    when: {suppressed: {eq: true}}
+    effect: DENY
+    reason_code: SUPPRESSED
+    overridable: false
+
+  - id: LEGAL_HOLD
+    when: {legal_hold: {eq: true}}
+    applies_to: ["*"]
+    effect: DENY
+    reason_code: LEGAL_HOLD
+    overridable: false
+
+  - id: CLASS_B_NO_OUTREACH
+    description: Merchant/integration failures never generate customer contact
+    applies_to: [sms, whatsapp, email, voice, send_template_message, create_payment_link]
+    when: {recoverability_class: {eq: B}}
+    effect: DENY
+    reason_code: CLASS_B_ENGINEERING_ONLY
+    overridable: false
+
+  - id: HARD_DECLINE_NO_SILENT_RETRY
+    applies_to: [silent_retry_same_instrument]
+    when: {recoverability_class: {in: [T, I]}}
+    effect: DENY
+    reason_code: HARD_DECLINE_TERMINAL
+
+  - id: FRAUD_NO_RETRY
+    applies_to: [silent_retry_same_instrument]
+    when: {error_reason: {eq: payment_risk_check_failed}}
+    effect: DENY
+    reason_code: RISK_DECLINE_NO_RETRY
+
+  - id: SAME_DAY_IFF_FORBIDDEN
+    applies_to: [silent_retry_same_instrument]
+    when: {error_reason: {eq: insufficient_funds}, hours_since_failure: {lt: 24}}
+    effect: DENY
+    reason_code: IFF_SAME_DAY_SUPPRESSES_APPROVAL
+
+  - id: DEEMED_MUST_RECONCILE
+    description: Indeterminate outcomes (deemed, pending, duplicate RRN). reconcile before any retry, never blind-retry a possibly-settled debit
+    applies_to: [silent_retry_same_instrument, create_payment_link, send_template_message]
+    when:
+      error_reason: {in: [deemed_transaction, payment_pending, collect_request_pending, duplicate_rrn, duplicate_rrn_found]}
+      reconciled: {eq: false}
+    effect: DENY
+    reason_code: RECONCILE_BEFORE_RETRY
+
+  - id: ALREADY_PAID
+    applies_to: ["*"]
+    when: {already_paid: {eq: true}}
+    effect: DENY
+    reason_code: LATE_AUTH_ALREADY_PAID
+    overridable: false
+
+  - id: PTP_FREEZE
+    applies_to: [sms, whatsapp, email, voice, send_template_message, silent_retry_same_instrument]
+    when: {ptp_active: {eq: true}}
+    effect: DENY
+    reason_code: PTP_DUNNING_PAUSED
+
+  - id: OPEN_DISPUTE
+    applies_to: [sms, whatsapp, email, voice, send_template_message, silent_retry_same_instrument]
+    when: {dispute_open: {eq: true}}
+    effect: DENY
+    reason_code: DISPUTE_OPEN
+
+  - id: FREQUENCY_CAP
+    applies_to: [sms, whatsapp, email, voice, send_template_message]
+    when: {touches_this_case: {gte: 5}}
+    effect: DENY
+    reason_code: FREQUENCY_CAP_EXCEEDED
+
+  - id: WEEKLY_CAP
+    applies_to: [sms, whatsapp, email, voice, send_template_message]
+    when: {contacts_last_7d: {gte: 3}}
+    effect: DENY
+    reason_code: WEEKLY_CAP_EXCEEDED
+
+  - id: QUIET_HOURS_IST
+    description: No outbound on any customer channel 19:00 to 09:00 IST; defer, do not drop
+    applies_to: [sms, whatsapp, email, voice, send_template_message]
+    when: {local_hour: {not_in_range: [9, 19]}}
+    effect: DEFER
+    reason_code: QUIET_HOURS
+    defer_to: "next_local_time:09:00"
+
+  - id: UPI_PEAK_WINDOW
+    applies_to: [schedule_mandate_presentment, silent_retry_same_instrument]
+    when: {mandate_rail: {eq: upi}, in_upi_peak: {eq: true}}
+    effect: DEFER
+    reason_code: UPI_PEAK_WINDOW
+    defer_to: "upi_next_allowed"
+
+  - id: UPI_BUDGET
+    applies_to: [schedule_mandate_presentment, silent_retry_same_instrument]
+    when: {mandate_rail: {eq: upi}, mandate_attempts_used: {gte: 4}}
+    effect: DENY
+    reason_code: UPI_ATTEMPT_BUDGET_EXHAUSTED
+
+  - id: NACH_GAP
+    description: 3-day gap between re-presentations; unknown gap fails closed
+    applies_to: [schedule_mandate_presentment]
+    when: {mandate_rail: {eq: nach}, nach_gap_ok: {in: [false, null]}}
+    effect: DENY
+    reason_code: NACH_MIN_GAP
+
+  - id: NACH_BUDGET
+    description: Max 2 re-presentations after the original presentment
+    applies_to: [schedule_mandate_presentment]
+    when: {mandate_rail: {eq: nach}, nach_representations_used: {gte: 2}}
+    effect: DENY
+    reason_code: NACH_REPRESENTATION_BUDGET_EXHAUSTED
+
+  - id: NACH_NO_CONFIRM
+    applies_to: [schedule_mandate_presentment]
+    when: {mandate_rail: {eq: nach}, customer_confirmed_funds: {eq: false}}
+    effect: DENY
+    reason_code: NACH_NEEDS_CUSTOMER_CONFIRMATION
+
+  - id: PDN_CLOCK
+    description: Pre-debit notification must be >= 24h old; unknown age fails closed into DEFER
+    applies_to: [schedule_mandate_presentment]
+    when: {pdn_ready: {eq: false}}
+    effect: DEFER
+    reason_code: PDN_24H_NOT_ELAPSED
+    defer_to: "pdn_ready_at"
+
+  - id: COUPON_ON_SERVICE_SMS
+    applies_to: [send_template_message, sms]
+    when: {channel: {eq: sms}, has_coupon: {eq: true}}
+    effect: DENY
+    reason_code: COUPON_RECLASSIFIES_PROMOTIONAL
+
+  - id: AMOUNT_MISMATCH
+    applies_to: [create_payment_link, issue_or_notify_invoice]
+    when: {amount_mismatch: {eq: true}}
+    effect: DENY
+    reason_code: AMOUNT_MISMATCH
+
+  - id: HIGH_VALUE_APPROVAL
+    description: Amount above the auto threshold needs a named approver, on any money action
+    applies_to: [voice, send_template_message, create_payment_link, silent_retry_same_instrument, issue_or_notify_invoice, send_subscription_update_method_link]
+    when: {amount_paise: {gt: 5000000}}
+    effect: REQUIRE_APPROVAL
+    reason_code: AMOUNT_ABOVE_AUTO_THRESHOLD
+    approver_role: finance_ops
+
+  - id: STRATEGIC_ACCOUNT
+    applies_to: [voice, send_template_message]
+    when: {strategic_tier: {eq: key}, channel: {eq: voice}}
+    effect: REQUIRE_APPROVAL
+    reason_code: RELATIONSHIP_COST
+
+  - id: LEGAL_STEP_REFUSE
+    applies_to: [refuse_legal_step]
+    when: {requested_legal_step: {eq: true}}
+    effect: DENY
+    reason_code: LEGAL_REFUSE_HUMAN_ONLY
+    overridable: false
+
+  - id: PORTABILITY_NUDGE
+    applies_to: [send_template_message]
+    when: {portability_nudge: {eq: true}}
+    effect: DENY
+    reason_code: NPCI_OC223_NO_PORT_NUDGE
+    overridable: false
+
+  - id: PAUSE_AUTHENTICATED_SUB
+    applies_to: ["*"]
+    when: {would_pause_authenticated_sub: {eq: true}}
+    effect: DENY
+    reason_code: PAUSE_AUTHENTICATED_CANCELS
+    overridable: false

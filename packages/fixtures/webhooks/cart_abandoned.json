@@ -1,0 +1,12 @@
+{
+  "event": "cart.abandoned",
+  "payload": {
+    "entity": {
+      "id": "cart_demo",
+      "amount": 49900,
+      "currency": "INR",
+      "contact": "+919800000001",
+      "email": "riya@example.test"
+    }
+  }
+}

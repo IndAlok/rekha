@@ -1,0 +1,12 @@
+FROM python:3.12-slim
+WORKDIR /app
+COPY pyproject.toml README.md ./
+COPY apps/api ./apps/api
+COPY packages ./packages
+RUN pip install --no-cache-dir -e . && mkdir -p /app/artifacts/eval
+ENV PYTHONPATH=/app/apps/api
+ENV AUTO_EVAL_ON_BOOT=true
+EXPOSE 8080
+HEALTHCHECK --interval=10s --timeout=3s --start-period=90s --retries=12 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=2)"
+CMD ["uvicorn", "rekha.api:app", "--host", "0.0.0.0", "--port", "8080"]

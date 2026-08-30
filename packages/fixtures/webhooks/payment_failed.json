@@ -1,0 +1,17 @@
+{
+  "event": "payment.failed",
+  "payload": {
+    "payment": {
+      "entity": {
+        "id": "pay_demo_failed",
+        "entity": "payment",
+        "amount": 129900,
+        "currency": "INR",
+        "status": "failed",
+        "error_reason": "insufficient_funds",
+        "error_source": "customer",
+        "order_id": "order_demo"
+      }
+    }
+  }
+}

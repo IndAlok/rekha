@@ -1,0 +1,58 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: sqlite+pysqlite:////var/lib/rekha/rekha.db
+      COMMS_ADAPTER: file
+      AUTO_EVAL_ON_BOOT: "true"
+      REKHA_ENV: ${REKHA_ENV:-dev}
+      OPS_TOKEN: ${OPS_TOKEN:-}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      PAYMENTS_ADAPTER: ${PAYMENTS_ADAPTER:-sandbox}
+    volumes:
+      - sqlite-data:/var/lib/rekha
+      - ../artifacts:/app/artifacts
+      - ../packages:/app/packages
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 18
+      start_period: 90s
+
+  web:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.web
+    ports:
+      - "3000:3000"
+    environment:
+      API_UPSTREAM: http://api:8080
+      NEXT_PUBLIC_API_URL: /api
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    profiles: ["full"]
+    environment:
+      POSTGRES_USER: rekha
+      POSTGRES_PASSWORD: rekha
+      POSTGRES_DB: rekha
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  sqlite-data:

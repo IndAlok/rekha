@@ -1,0 +1,23 @@
+{
+  "event": "payment.authorized",
+  "event_id": "evt_sample_authorized_1",
+  "payload": {
+    "customer": {
+      "id": "cust_sample",
+      "name": "Riya",
+      "contact": "+919800000001",
+      "consent": true
+    },
+    "payment": {
+      "entity": {
+        "id": "pay_demo_auth",
+        "entity": "payment",
+        "status": "authorized",
+        "amount": 129900,
+        "currency": "INR",
+        "order_id": "order_demo",
+        "customer_id": "cust_sample"
+      }
+    }
+  }
+}

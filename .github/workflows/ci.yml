@@ -1,0 +1,62 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: ruff check apps/api tests packages
+      - run: pytest -q --cov=rekha --cov-fail-under=85
+      - run: python -m rekha eval
+      - name: eval must not rewrite golden
+        run: git diff --exit-code -- packages/fixtures/golden.json
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - working-directory: apps/web
+        run: npm ci
+      - working-directory: apps/web
+        run: npm run lint
+      - working-directory: apps/web
+        run: npm test
+      - working-directory: apps/web
+        run: npx tsc --noEmit
+      - working-directory: apps/web
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: /api
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - working-directory: apps/web
+        run: npm ci
+      - working-directory: apps/web
+        run: npx playwright install --with-deps chromium
+      - working-directory: apps/web
+        run: npx playwright test
+        env:
+          CI: "true"
+          NEXT_PUBLIC_API_URL: /api
+          API_UPSTREAM: http://127.0.0.1:8080
