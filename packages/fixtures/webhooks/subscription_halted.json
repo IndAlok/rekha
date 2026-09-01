@@ -1,0 +1,14 @@
+{
+  "event": "subscription.halted",
+  "payload": {
+    "subscription": {
+      "entity": {
+        "id": "sub_demo_halted",
+        "entity": "subscription",
+        "status": "halted",
+        "customer_id": "cust_saas",
+        "plan_id": "plan_demo"
+      }
+    }
+  }
+}

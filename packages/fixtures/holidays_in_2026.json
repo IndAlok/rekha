@@ -1,0 +1,16 @@
+{
+  "timezone": "Asia/Kolkata",
+  "dates": [
+    "2026-01-26",
+    "2026-03-03",
+    "2026-03-31",
+    "2026-04-03",
+    "2026-08-15",
+    "2026-10-02",
+    "2026-10-20",
+    "2026-11-08",
+    "2026-12-25"
+  ],
+  "note": "Settlement-holiday subset for eval. Confirm against NPCI/RBI calendar before live use.",
+  "grade": "secondary"
+}

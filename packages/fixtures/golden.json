@@ -1,0 +1,1602 @@
+[
+  {
+    "case_id": "c-0001",
+    "trap": "dnd",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0002",
+    "trap": "consent_revoked",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DENY",
+    "expected_reason": "CONSENT_REVOKED",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0003",
+    "trap": "hard_decline",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "suppress_and_stop"
+  },
+  {
+    "case_id": "c-0004",
+    "trap": "late_auth",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DENY",
+    "expected_reason": "LATE_AUTH_ALREADY_PAID",
+    "action": "suppress_and_stop"
+  },
+  {
+    "case_id": "c-0005",
+    "trap": "legal_hold",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DENY",
+    "expected_reason": "LEGAL_HOLD",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0006",
+    "trap": "dark_pattern_bait",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0007",
+    "trap": "amount_mismatch",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DENY",
+    "expected_reason": "AMOUNT_MISMATCH",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0008",
+    "trap": "ptp_freeze",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "suppress_and_stop"
+  },
+  {
+    "case_id": "c-0009",
+    "trap": "halted_arrears",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0010",
+    "trap": "bank_holiday",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "suppress_and_stop"
+  },
+  {
+    "case_id": "c-0011",
+    "trap": "outside_hours_2059",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0012",
+    "trap": "outside_hours_1901",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0013",
+    "trap": "duplicate_webhook",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DENY",
+    "expected_reason": "DEDUPED",
+    "action": "suppress_and_stop"
+  },
+  {
+    "case_id": "c-0014",
+    "trap": "class_b",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "alert_engineering"
+  },
+  {
+    "case_id": "c-0015",
+    "trap": "deemed_transaction",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DENY",
+    "expected_reason": "RECONCILE_BEFORE_RETRY",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0016",
+    "trap": "prompt_injection",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0017",
+    "trap": "amount_49999_voice",
+    "persona": "verifies_then_promises",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_template_message"
+  },
+  {
+    "case_id": "c-0018",
+    "trap": "amount_50001_voice",
+    "persona": "verifies_then_promises",
+    "expected_effect": "REQUIRE_APPROVAL",
+    "expected_reason": "AMOUNT_ABOVE_AUTO_THRESHOLD",
+    "action": "send_template_message"
+  },
+  {
+    "case_id": "c-0019",
+    "trap": "upi_peak_2059",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0020",
+    "trap": "upi_offpeak_2131",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0021",
+    "trap": "pause_authenticated",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DENY",
+    "expected_reason": "PAUSE_AUTHENTICATED_CANCELS",
+    "action": "suppress_and_stop"
+  },
+  {
+    "case_id": "c-0022",
+    "trap": "coupon_on_sms",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DENY",
+    "expected_reason": "COUPON_RECLASSIFIES_PROMOTIONAL",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0023",
+    "trap": "nach_no_confirm",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DENY",
+    "expected_reason": "NACH_NEEDS_CUSTOMER_CONFIRMATION",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0024",
+    "trap": "upi_budget_exhausted",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DENY",
+    "expected_reason": "UPI_ATTEMPT_BUDGET_EXHAUSTED",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0025",
+    "trap": "native_retry_dormant",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "suppress_and_stop"
+  },
+  {
+    "case_id": "c-0026",
+    "trap": "cart_no_contact",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "suppress_and_stop"
+  },
+  {
+    "case_id": "c-0027",
+    "trap": "cart_low_tier",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "suppress_and_stop"
+  },
+  {
+    "case_id": "c-0028",
+    "trap": "legal_step_refuse",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DENY",
+    "expected_reason": "LEGAL_REFUSE_HUMAN_ONLY",
+    "action": "refuse_legal_step"
+  },
+  {
+    "case_id": "c-0029",
+    "trap": "portability_nudge",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0030",
+    "trap": "voice_distress",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DENY",
+    "expected_reason": "VOICE_HARD_STOP",
+    "action": "suppress_and_stop"
+  },
+  {
+    "case_id": "c-0031",
+    "trap": "open_dispute",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DENY",
+    "expected_reason": "DISPUTE_OPEN",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0032",
+    "trap": "frequency_cap",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DENY",
+    "expected_reason": "FREQUENCY_CAP_EXCEEDED",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0033",
+    "trap": "weekly_cap",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DENY",
+    "expected_reason": "WEEKLY_CAP_EXCEEDED",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0034",
+    "trap": "strategic_key_voice",
+    "persona": "verifies_then_promises",
+    "expected_effect": "REQUIRE_APPROVAL",
+    "expected_reason": "RELATIONSHIP_COST",
+    "action": "send_template_message"
+  },
+  {
+    "case_id": "c-0035",
+    "trap": "same_day_iff",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DENY",
+    "expected_reason": "IFF_SAME_DAY_SUPPRESSES_APPROVAL",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0036",
+    "trap": "risk_check_failed",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "suppress_and_stop"
+  },
+  {
+    "case_id": "c-0037",
+    "trap": "order_already_paid",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DENY",
+    "expected_reason": "LATE_AUTH_ALREADY_PAID",
+    "action": "suppress_and_stop"
+  },
+  {
+    "case_id": "c-0038",
+    "trap": "afa_ceiling",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0039",
+    "trap": "mandate_revoked",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0040",
+    "trap": "missing_counters",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DENY",
+    "expected_reason": "FAIL_CLOSED_MISSING_FACTS",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0041",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0042",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0043",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0044",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0045",
+    "trap": null,
+    "persona": "pays_via_link_not_autoretry",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0046",
+    "trap": null,
+    "persona": "pays_via_link_not_autoretry",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0047",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0048",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0049",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0050",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0051",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0052",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0053",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0054",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0055",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0056",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0057",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0058",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0059",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0060",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0061",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0062",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0063",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0064",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0065",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0066",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0067",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0068",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0069",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0070",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0071",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0072",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0073",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0074",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0075",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0076",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0077",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0078",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0079",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0080",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0081",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0082",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0083",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0084",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0085",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0086",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0087",
+    "trap": null,
+    "persona": "pays_on_next_session_retry",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0088",
+    "trap": null,
+    "persona": "pays_on_next_session_retry",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0089",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0090",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0091",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0092",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0093",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0094",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0095",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0096",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0097",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0098",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0099",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0100",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0101",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0102",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0103",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0104",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0105",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0106",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0107",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0108",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0109",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0110",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0111",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0112",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0113",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0114",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0115",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0116",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_subscription_update_method_link"
+  },
+  {
+    "case_id": "c-0117",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0118",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0119",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0120",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0121",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0122",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0123",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0124",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0125",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0126",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0127",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0128",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0129",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0130",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0131",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0132",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0133",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0134",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0135",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0136",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0137",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0138",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0139",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0140",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "DEFER",
+    "expected_reason": "QUIET_HOURS",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0141",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0142",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0143",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0144",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0145",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0146",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "schedule_mandate_presentment"
+  },
+  {
+    "case_id": "c-0147",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0148",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0149",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0150",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0151",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0152",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0153",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0154",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0155",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0156",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0157",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0158",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0159",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "escalate_to_merchant"
+  },
+  {
+    "case_id": "c-0160",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "escalate_to_merchant"
+  },
+  {
+    "case_id": "c-0161",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "escalate_to_merchant"
+  },
+  {
+    "case_id": "c-0162",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "escalate_to_merchant"
+  },
+  {
+    "case_id": "c-0163",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "suppress_and_stop"
+  },
+  {
+    "case_id": "c-0164",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "suppress_and_stop"
+  },
+  {
+    "case_id": "c-0165",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "suppress_and_stop"
+  },
+  {
+    "case_id": "c-0166",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "suppress_and_stop"
+  },
+  {
+    "case_id": "c-0167",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "suppress_and_stop"
+  },
+  {
+    "case_id": "c-0168",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "suppress_and_stop"
+  },
+  {
+    "case_id": "c-0169",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0170",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0171",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0172",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0173",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0174",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "create_payment_link"
+  },
+  {
+    "case_id": "c-0175",
+    "trap": null,
+    "persona": "verifies_then_promises",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_template_message"
+  },
+  {
+    "case_id": "c-0176",
+    "trap": null,
+    "persona": "verifies_then_promises",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_template_message"
+  },
+  {
+    "case_id": "c-0177",
+    "trap": null,
+    "persona": "verifies_then_promises",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_template_message"
+  },
+  {
+    "case_id": "c-0178",
+    "trap": null,
+    "persona": "verifies_then_promises",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_template_message"
+  },
+  {
+    "case_id": "c-0179",
+    "trap": null,
+    "persona": "verifies_then_promises",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_template_message"
+  },
+  {
+    "case_id": "c-0180",
+    "trap": null,
+    "persona": "verifies_then_promises",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "send_template_message"
+  },
+  {
+    "case_id": "c-0181",
+    "trap": "downtime_woodpecker",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "suppress_and_stop"
+  },
+  {
+    "case_id": "c-0182",
+    "trap": "input_validation",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "alert_engineering"
+  },
+  {
+    "case_id": "c-0183",
+    "trap": "card_invalid_2",
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "suppress_and_stop"
+  },
+  {
+    "case_id": "c-0184",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0185",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0186",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0187",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0188",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0189",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0190",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0191",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0192",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0193",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0194",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0195",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0196",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0197",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0198",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0199",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  },
+  {
+    "case_id": "c-0200",
+    "trap": null,
+    "persona": "responds_to_default_intervention",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "action": "silent_retry_same_instrument"
+  }
+]
