@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import threading
-from contextlib import asynccontextmanager, suppress
+from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -17,13 +18,13 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from rekha.audit import AuditChain, verify_rows
 from rekha.config import cors_origin_list, settings
-from rekha.engine import RecoveryEngine
+from rekha.engine import RecoveryEngine, is_customer_contact
 from rekha.eval.cohort import generate_cohort
 from rekha.eval.runner import run_eval
 from rekha.ingest import event_to_case, verify_webhook_signature, webhook_hmac
 from rekha.paths import FIXTURES_DIR, REPO_ROOT
 from rekha.runtime import FLAGS
-from rekha.sandbox import FileInbox, RazorpaySandbox
+from rekha.sandbox import FileInbox, RazorpaySandbox, UnavailablePayments
 from rekha.status import eval_artifact_path
 from rekha.store import (
     ApprovalStore,
@@ -40,6 +41,7 @@ from rekha.store import (
 
 IST = ZoneInfo("Asia/Kolkata")
 _LOCK = threading.Lock()
+log = logging.getLogger("rekha.api")
 
 STATE: dict = {
     "inbox": None,  # PersistentInbox, bound at startup
@@ -49,6 +51,11 @@ STATE: dict = {
     "latest": None,
     "mtime": None,
     "engine": None,  # singleton live engine
+    "boot_ok": True,
+    "boot_errors": [],
+    "payments_error": None,
+    "payments_fallback": False,
+    "payments_adapter_effective": "sandbox",
 }
 
 
@@ -56,15 +63,31 @@ def wall_now() -> datetime:
     return datetime.now(IST)
 
 
-def _payments():
-    if settings.payments_adapter == "razorpay_test":
-        try:
-            from rekha.razorpay_live import RazorpayLive
+def _prod() -> bool:
+    return settings.rekha_env != "dev"
 
-            return RazorpayLive()
-        except Exception:  # noqa: BLE001
-            return STATE["sandbox"]
-    return STATE["sandbox"]
+
+def _payments():
+    STATE["payments_error"] = None
+    STATE["payments_fallback"] = False
+    if settings.payments_adapter != "razorpay_test":
+        STATE["payments_adapter_effective"] = "sandbox"
+        return STATE["sandbox"]
+    try:
+        from rekha.razorpay_live import RazorpayLive
+
+        live = RazorpayLive()
+        STATE["payments_adapter_effective"] = "razorpay_test"
+        return live
+    except Exception as exc:
+        STATE["payments_error"] = str(exc)
+        log.exception("razorpay_test adapter failed")
+        if _prod():
+            STATE["payments_adapter_effective"] = "unavailable"
+            return UnavailablePayments()
+        STATE["payments_fallback"] = True
+        STATE["payments_adapter_effective"] = "sandbox"
+        return STATE["sandbox"]
 
 
 def _live_engine() -> RecoveryEngine:
@@ -125,7 +148,7 @@ def _ensure_latest(*, run_if_missing: bool) -> dict:
             return loaded
         if not run_if_missing:
             raise _http(404, "EVAL_MISSING", "No eval report yet. Use Run eval.")
-        payload = run_eval(seed=42, write=True, write_golden=False)
+        payload = run_eval(seed=42, write=False, write_golden=False)
         if not _payload_ok(payload):
             raise _http(500, "EVAL_BROKEN", "Eval finished but the report was unreadable.")
         STATE["latest"] = payload
@@ -156,18 +179,43 @@ def _drain_pending() -> None:
 _SCHEDULER = None
 
 
+def _boot_note(errors: list[str], label: str, exc: BaseException) -> None:
+    msg = f"{label}: {exc}"
+    errors.append(msg)
+    log.exception("%s", msg)
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     global _SCHEDULER
-    with suppress(OSError, ImportError, RuntimeError):
+    errors: list[str] = []
+    prod = _prod()
+
+    if settings.comms_adapter != "file":
+        if prod:
+            errors.append("comms_adapter must be file")
+            log.error("comms_adapter=%s refused in prod", settings.comms_adapter)
+        else:
+            log.warning("comms_adapter=%s ignored, FileInbox only", settings.comms_adapter)
+
+    try:
         from rekha.db.session import init_db
 
         init_db()
-    with suppress(Exception):  # best-effort in dev
+    except Exception as exc:  # noqa: BLE001
+        _boot_note(errors, "init_db", exc)
+
+    try:
         saved_kill = RuntimeKVStore.get("kill_switch")
         if isinstance(saved_kill, bool):
             FLAGS.kill_switch = saved_kill
-    with suppress(Exception):  # best-effort in dev
+        saved_wa = RuntimeKVStore.get("whatsapp_quality")
+        if saved_wa in {"green", "yellow", "red"}:
+            FLAGS.whatsapp_quality = saved_wa
+    except Exception as exc:  # noqa: BLE001
+        _boot_note(errors, "kill_restore", exc)
+
+    try:
         STATE["inbox"] = PersistentInbox()
         chain = AuditChain(sink=PersistentAuditSink())
         last = PersistentAuditSink.last_row()
@@ -181,6 +229,11 @@ async def lifespan(_app: FastAPI):
 
         _SCHEDULER = Scheduler(_live_engine)
         await _SCHEDULER.start()
+    except Exception as exc:  # noqa: BLE001
+        _boot_note(errors, "runtime", exc)
+
+    STATE["boot_errors"] = errors
+    STATE["boot_ok"] = len(errors) == 0
     if settings.auto_eval_on_boot:
         def _boot_eval() -> None:
             try:
@@ -220,8 +273,16 @@ async def _ops_guard(request: Request, call_next):
                 _require_ops(request.headers.get("x-ops-token"))
             except HTTPException as exc:
                 detail = exc.detail if isinstance(exc.detail, dict) else {"code": "UNAUTHORIZED", "message": str(exc.detail)}
-                return JSONResponse(status_code=exc.status_code, content={"detail": detail})
-    return await call_next(request)
+                denied = JSONResponse(status_code=exc.status_code, content={"detail": detail})
+                denied.headers.setdefault("X-Content-Type-Options", "nosniff")
+                denied.headers.setdefault("X-Frame-Options", "DENY")
+                denied.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+                return denied
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    return response
 
 
 @app.exception_handler(StarletteHTTPException)
@@ -254,8 +315,18 @@ def root() -> dict:
 
 
 @app.get("/health")
-def health() -> dict:
-    return {"ok": True, "kill_switch": FLAGS.kill_switch, "name": "rekha"}
+def health():
+    payments_bad = _prod() and settings.payments_adapter == "razorpay_test" and bool(STATE.get("payments_error"))
+    ok = bool(STATE.get("boot_ok", True)) and not payments_bad
+    body = {
+        "ok": ok,
+        "kill_switch": FLAGS.kill_switch,
+        "name": "rekha",
+        "errors": list(STATE.get("boot_errors") or []),
+    }
+    if not ok:
+        return JSONResponse(status_code=503, content=body)
+    return body
 
 
 @app.get("/status")
@@ -278,6 +349,12 @@ def status() -> dict:
         "ops_auth_required": not (settings.rekha_env == "dev" and not settings.ops_token),
         "webhook_secret_set": bool(settings.razorpay_webhook_secret),
         "payments_adapter": settings.payments_adapter,
+        "payments_adapter_effective": STATE.get("payments_adapter_effective") or settings.payments_adapter,
+        "payments_fallback": bool(STATE.get("payments_fallback")),
+        "payments_error": STATE.get("payments_error"),
+        "boot_ok": bool(STATE.get("boot_ok", True)),
+        "boot_errors": list(STATE.get("boot_errors") or []),
+        "whatsapp_quality": FLAGS.whatsapp_quality,
         "database": "postgres" if "postgres" in db_url else "sqlite",
         "degradation": MONITOR.ranked_by_rupees()[:8],
     }
@@ -412,10 +489,14 @@ class KillBody(BaseModel):
 def kill_switch(body: KillBody, x_ops_token: str | None = Header(default=None, alias="X-Ops-Token")) -> dict:
     _require_ops(x_ops_token)
     FLAGS.kill_switch = body.engaged
-    with suppress(Exception):
+    persisted = False
+    try:
         RuntimeKVStore.set("kill_switch", body.engaged)
-    STATE["audit"].append({"actor": "ops", "action": "kill_switch", "payload": {"engaged": body.engaged}})
-    return {"kill_switch": FLAGS.kill_switch}
+        persisted = True
+    except Exception:
+        log.exception("kill persist failed")
+    STATE["audit"].append({"actor": "ops", "action": "kill_switch", "payload": {"engaged": body.engaged, "persisted": persisted}})
+    return {"kill_switch": FLAGS.kill_switch, "persisted": persisted}
 
 
 @app.get("/kill-switch")
@@ -483,7 +564,7 @@ def approval_decide(
             }
         )
         if execution.get("ok"):
-            contacted = proposal.get("channel") not in (None, "internal")
+            contacted = is_customer_contact(proposal)
             CaseStore.record_touch(
                 case["id"],
                 contacted=contacted,
@@ -618,7 +699,7 @@ def eval_run(seed: int = 42) -> dict:
     if seed < 0:
         raise _http(400, "BAD_SEED", "seed must be zero or greater")
     try:
-        payload = run_eval(seed=seed, write=True, write_golden=False)
+        payload = run_eval(seed=seed, write=False, write_golden=False)
     except Exception as exc:
         raise _http(500, "EVAL_FAILED", "eval failed") from exc
     if not _payload_ok(payload):
@@ -672,6 +753,17 @@ def awaaz_session(body: AwaazBody) -> dict:
         session = run_scripted_session(case, body.lines, wall_now())
     except ValueError as exc:
         raise _http(400, "BAD_REQUEST", str(exc)) from exc
+    promise = None
+    if session.captured_ptp:
+        promised = str(session.captured_ptp.get("date") or "")
+        amount = int(session.captured_ptp.get("amount_paise") or case["amount_paise"])
+        if promised:
+            try:
+                promise = PromiseStore.create(
+                    case, amount, promised, {"channel": "voice", "source": "awaaz"}
+                )
+            except Exception:
+                log.exception("awaaz ptp persist failed")
     return {
         "case_id": case["id"],
         "verified": session.verified,
@@ -679,6 +771,7 @@ def awaaz_session(body: AwaazBody) -> dict:
         "stop_reason": session.stop_reason,
         "compliance_flags": session.compliance_flags,
         "captured_ptp": session.captured_ptp,
+        "promise": promise,
         "turns": [{"state": t.state, "agent": t.agent, "user": t.user, "tool": t.tool} for t in session.turns],
     }
 
@@ -790,3 +883,45 @@ def customer_consent(customer_id: str, body: ConsentBody) -> dict:
         {"actor": "ops", "action": "consent_set", "payload": {"customer_id": customer_id, "status": body.status}}
     )
     return row
+
+
+class CustomerFlagsBody(BaseModel):
+    dnd: bool | None = None
+    legal_hold: bool | None = None
+    opt_out: bool | None = None
+
+
+@app.post("/ops/customers/{customer_id}/flags")
+def customer_flags(customer_id: str, body: CustomerFlagsBody) -> dict:
+    if body.dnd is None and body.legal_hold is None and body.opt_out is None:
+        raise _http(400, "BAD_REQUEST", "at least one flag is required")
+    row = ConsentStore.set_flags(
+        customer_id, dnd=body.dnd, legal_hold=body.legal_hold, opt_out=body.opt_out
+    )
+    STATE["audit"].append(
+        {
+            "actor": "ops",
+            "action": "customer_flags",
+            "payload": {"customer_id": customer_id, "dnd": body.dnd, "legal_hold": body.legal_hold, "opt_out": body.opt_out},
+        }
+    )
+    return row
+
+
+class WhatsappQualityBody(BaseModel):
+    quality: str = Field(pattern="^(green|yellow|red)$")
+
+
+@app.post("/ops/whatsapp-quality")
+def whatsapp_quality(body: WhatsappQualityBody) -> dict:
+    FLAGS.whatsapp_quality = body.quality
+    persisted = False
+    try:
+        RuntimeKVStore.set("whatsapp_quality", body.quality)
+        persisted = True
+    except Exception:
+        log.exception("whatsapp quality persist failed")
+    STATE["audit"].append(
+        {"actor": "ops", "action": "whatsapp_quality", "payload": {"quality": body.quality, "persisted": persisted}}
+    )
+    return {"whatsapp_quality": FLAGS.whatsapp_quality, "persisted": persisted}

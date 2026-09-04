@@ -22,4 +22,13 @@ describe("parseError", () => {
     const err = await parseError(res)
     expect(err.code).toBe("KILL_SWITCH")
   })
+
+  test("409 policy changed keeps code", async () => {
+    const res = new Response(JSON.stringify({ detail: { code: "POLICY_CHANGED", message: "CONSENT_REVOKED" } }), {
+      status: 409,
+      headers: { "content-type": "application/json" },
+    })
+    const err = await parseError(res)
+    expect(err.code).toBe("POLICY_CHANGED")
+  })
 })

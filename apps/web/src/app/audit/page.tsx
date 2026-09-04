@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { EvalGate } from "@/components/EvalGate"
 import { Banner } from "@/components/ui/Banner"
 import { Button } from "@/components/ui/Button"
@@ -25,6 +25,21 @@ export default function AuditPage() {
   const [open, setOpen] = useState<Record<string, unknown> | null>(null)
   const [forcedBreak, setForcedBreak] = useState<string | null>(null)
   const toast = useToast()
+  const drawerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const prev = document.activeElement as HTMLElement | null
+    drawerRef.current?.focus()
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(null)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => {
+      window.removeEventListener("keydown", onKey)
+      prev?.focus()
+    }
+  }, [open])
   const rows = useMemo(() => {
     const all = audit?.rows || []
     if (!q) return all
@@ -139,15 +154,18 @@ export default function AuditPage() {
         </>
       )}
       {open ? (
-        <div className="drawer" role="dialog" aria-label="Audit payload">
-          <div className="btn-row" style={{ marginBottom: 12 }}>
-            <strong>seq {String(open.seq)}</strong>
-            <Button variant="ghost" onClick={() => setOpen(null)}>
-              Close
-            </Button>
+        <>
+          <div className="drawer-backdrop" onClick={() => setOpen(null)} />
+          <div className="drawer" role="dialog" aria-modal="true" aria-label="Audit payload" tabIndex={-1} ref={drawerRef}>
+            <div className="btn-row" style={{ marginBottom: 12 }}>
+              <strong>seq {String(open.seq)}</strong>
+              <Button variant="ghost" onClick={() => setOpen(null)}>
+                Close
+              </Button>
+            </div>
+            <JsonView value={open} label="row" />
           </div>
-          <JsonView value={open} label="row" />
-        </div>
+        </>
       ) : null}
     </>
   )

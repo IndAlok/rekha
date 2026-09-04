@@ -1,6 +1,6 @@
 [project]
 name = "rekha"
-version = "0.1.0"
+version = "0.2.0"
 description = "Bounded revenue recovery for Razorpay test-mode"
 readme = "README.md"
 requires-python = ">=3.12"

@@ -62,6 +62,7 @@ function active(pathname: string, href: string) {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [status, setStatus] = useState<Status | null>(null)
+  const [apiPhase, setApiPhase] = useState<"pending" | "up" | "down">("pending")
   const [pending, setPending] = useState(0)
   const [authNeeded, setAuthNeeded] = useState(false)
 
@@ -82,10 +83,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       api
         .status()
         .then((row) => {
-          if (!cancelled) setStatus(row)
+          if (!cancelled) {
+            setStatus(row)
+            setApiPhase("up")
+          }
         })
         .catch(() => {
-          if (!cancelled) setStatus(null)
+          if (!cancelled) {
+            setStatus(null)
+            setApiPhase("down")
+          }
         })
       api
         .approvals("pending")
@@ -151,7 +158,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 {status?.kill_switch ? "kill switch on" : "kill switch off"}
               </span>
             </div>
-            <StatusBar />
+            <StatusBar status={status} phase={apiPhase} />
           </div>
         </aside>
         <div className="content">

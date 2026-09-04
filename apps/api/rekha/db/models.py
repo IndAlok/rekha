@@ -31,6 +31,7 @@ class Customer(Base):
     consent_withdrawn_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     opt_out: Mapped[bool] = mapped_column(Boolean, default=False)
     dnd: Mapped[bool] = mapped_column(Boolean, default=False)
+    legal_hold: Mapped[bool] = mapped_column(Boolean, default=False)
     strategic_tier: Mapped[str] = mapped_column(String, default="standard")
 
 

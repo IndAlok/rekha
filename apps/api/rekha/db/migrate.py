@@ -18,6 +18,7 @@ EXTRA_COLUMNS: list[tuple[str, str, str]] = [
     ("recovery_cases", "first_failed_at", "TIMESTAMP NULL"),
     ("customers", "consent_changed_at", "TIMESTAMP NULL"),
     ("customers", "consent_withdrawn_at", "TIMESTAMP NULL"),
+    ("customers", "legal_hold", "BOOLEAN NOT NULL DEFAULT 0"),
     ("recovery_ledger", "obligation_key", "VARCHAR"),
     ("promises_to_pay", "created_at", "TIMESTAMP NULL"),
     ("promises_to_pay", "updated_at", "TIMESTAMP NULL"),

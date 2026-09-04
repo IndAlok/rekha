@@ -20,7 +20,7 @@ export default function PtpPage() {
 
   return (
     <>
-      <PageHeader title="Promises" lede="An open promise freezes dunning. A renegotiation writes a new row. The parent is not edited. Live rows come from PromiseStore when any exist." />
+      <PageHeader title="Promises" lede="An open promise freezes dunning. A renegotiation writes a new row. The parent is not edited." />
       <Panel>
         {loading && rows.length === 0 ? <TableSkeleton /> : null}
         {!loading && rows.length === 0 ? <EmptyState title="No promise cases">Capture a PTP from Awaaz or Run case.</EmptyState> : null}
@@ -31,6 +31,7 @@ export default function PtpPage() {
                 <th>id</th>
                 <th>customer</th>
                 <th className="num">amount</th>
+                <th>due</th>
                 <th>state</th>
               </tr>
             </thead>
@@ -45,6 +46,7 @@ export default function PtpPage() {
                     </Td>
                     <Td>{String(r.customer_id || "")}</Td>
                     <Td className="num">{inr(Number(r.amount_paise || r.promised_amount_paise || 0))}</Td>
+                    <Td className="muted">{String(r.promised_date || "n/a")}</Td>
                     <Td>
                       <Badge tone={broken ? "negative" : "info"}>{String(r.state || (broken ? "Broken" : "Open"))}</Badge>
                     </Td>

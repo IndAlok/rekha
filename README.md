@@ -18,7 +18,7 @@ make serve
 
 API on :8080. Desk on :3000. `make eval` writes `artifacts/eval/report.md`. Docker is `make compose`. Postgres is `make compose-full`. Razorpay blocks ngrok, use zrok.
 
-Seed 42, 99 vs 100. Treatment ₹1,20,947, control ₹1,00,028, incremental ₹20,919. Rate lift +32.7pp, Newcombe [+18.9pp, +44.7pp]. Rupee BCa includes zero. A future `send_after` is scheduled, not recovered, unless the persona pays that day.
+Seed 42, 99 vs 100. Treatment ₹1,22,139, control ₹1,00,028, incremental ₹22,111. Rate lift +40.8pp, Newcombe [+27.3pp, +52.1pp]. Rupee BCa includes zero. A future `send_after` is scheduled, not recovered, unless the persona pays that day.
 
 ## Env
 

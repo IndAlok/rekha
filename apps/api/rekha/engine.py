@@ -4,16 +4,24 @@ import hashlib
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
+from rekha import constants
 from rekha.advisor import CLOSED_TOOLS, advise, filter_proposal
 from rekha.audit import AuditChain, canonical
-from rekha.clocks import as_ist, in_contact_window, in_upi_peak, local_hour, nach_gap_elapsed_days
+from rekha.clocks import (
+    as_ist,
+    in_contact_window,
+    in_upi_peak,
+    is_bank_holiday,
+    local_hour,
+    nach_gap_elapsed_days,
+)
 from rekha.compliance import scan_copy
 from rekha.degradation import MONITOR
 from rekha.diagnose import diagnose
 from rekha.execute import SAFE_INTERNAL_ACTIONS, Executor
 from rekha.p2p import PromiseToPay, evaluate_promise, freeze_active
 from rekha.playbooks import propose
-from rekha.policy import PolicyEngine, Verdict, get_engine
+from rekha.policy import SILENT_MONEY_ACTIONS, PolicyEngine, Verdict, get_engine
 from rekha.preflight import preflight
 from rekha.recon import ReconciliationGuard
 from rekha.runtime import FLAGS
@@ -31,6 +39,12 @@ OUTREACH_ACTIONS = {
 }
 
 MONEY_ACTIONS = OUTREACH_ACTIONS | {"silent_retry_same_instrument"}
+
+
+def is_customer_contact(proposal: dict) -> bool:
+    if proposal.get("action") in SILENT_MONEY_ACTIONS:
+        return False
+    return proposal.get("channel") not in (None, "internal")
 
 
 @dataclass
@@ -119,6 +133,8 @@ class RecoveryEngine:
             case = {**case, "id": case["case_id"]}
         if not case.get("id"):
             case = {**case, "id": "unknown"}
+        if "bank_holiday" not in case:
+            case = {**case, "bank_holiday": is_bank_holiday(now)}
         self._seed_world(case)
 
         if case.get("loss_class") == "recovery_event":
@@ -214,13 +230,33 @@ class RecoveryEngine:
             proposal = {"action": "suppress_and_stop", "reason": "action_not_in_allowlist", "engine": "router"}
         advised = filter_proposal(advise(case, diagnosis.to_dict()))
         if advised and advised.get("action") == proposal.get("action"):
-            proposal = {**proposal, **advised}
+            merged = dict(proposal)
+            if advised.get("reason"):
+                merged["reason"] = advised["reason"]
+            extra = advised.get("extra") if isinstance(advised.get("extra"), dict) else {}
+            send_after = extra.get("send_after") or advised.get("send_after")
+            if send_after:
+                merged["send_after"] = send_after
+                merged_extra = dict(proposal.get("extra") or {})
+                merged_extra["send_after"] = send_after
+                merged["extra"] = merged_extra
+            proposal = merged
 
         if case.get("llm_draft"):
             scan = scan_copy(case["llm_draft"], channel=proposal.get("channel") or "email")
             if not scan.ok:
-                proposal = {**proposal, "llm_draft_blocked": scan.flags}
                 self._audit("compliance_veto_llm", case, {"flags": scan.flags})
+                return self._finish(
+                    case,
+                    diagnosis.to_dict(),
+                    {**proposal, "llm_draft_blocked": scan.flags},
+                    _deny_verdict("COMPLIANCE_COPY_VETO"),
+                    executed=False,
+                    recovered=False,
+                    recovery_source="none",
+                    blocked=True,
+                    notes=["llm_draft_blocked"],
+                )
 
         if self.persist:
             throttled = self._store.ComplaintStore.throttled(case.get("customer_id") or "unknown", as_ist(now))
@@ -302,6 +338,15 @@ class RecoveryEngine:
                 "turns": len(session.turns),
                 "ptp": session.captured_ptp,
             }
+            if session.captured_ptp and self.persist and verdict.effect == "ALLOW":
+                amount = int(session.captured_ptp.get("amount_paise") or case.get("amount_paise") or 0)
+                promised = str(session.captured_ptp.get("date") or "")
+                if promised:
+                    row = self._store.PromiseStore.create(
+                        case, amount, promised, {"channel": "voice", "source": "awaaz"}
+                    )
+                    case["promise"] = row
+                    case["ptp_active"] = True
             if session.stopped:
                 verdict = _deny_verdict("VOICE_HARD_STOP")
                 proposal = {**proposal, "action": "suppress_and_stop", "reason": session.stop_reason}
@@ -351,7 +396,7 @@ class RecoveryEngine:
                         amount_paise=int(case.get("amount_paise") or 0),
                         attempt_no=int(case.get("touches_this_case") or 0) + 1,
                     )
-                    contacted = proposal.get("channel") not in (None, "internal")
+                    contacted = is_customer_contact(proposal)
                     self._cases.record_touch(
                         case["id"],
                         contacted=contacted,
@@ -397,7 +442,7 @@ class RecoveryEngine:
             if recovered:
                 self._cases.close(case["id"], recovered=True, source=source)
             elif result.blocked and verdict.reason_code in {"HARD_DO_NOT_CONTACT", "CONSENT_REVOKED", "CONSENT_NOT_ON_FILE", "SUPPRESSED"}:
-                self._cases.close(case["id"], recovered=False, stop_reason=verdict.reason_code)
+                self._cases.close(case["id"], recovered=False, source=source, stop_reason=verdict.reason_code)
         return result
 
 
@@ -525,7 +570,7 @@ class RecoveryEngine:
         flags: list[str] = []
         channel = proposal.get("channel")
         action = proposal.get("action")
-        contacted = executed and channel not in (None, "internal") and verdict.effect == "ALLOW"
+        contacted = executed and is_customer_contact(proposal) and verdict.effect == "ALLOW"
         if contacted and case.get("consent_status") in {"REVOKED", "UNKNOWN"}:
             flags.append("contacted_without_consent")
         if contacted and (case.get("suppressed") or case.get("dnd")):
@@ -545,7 +590,7 @@ class RecoveryEngine:
         attempts = int(case.get("mandate_attempts_used") or 0)
         if executed and action == "schedule_mandate_presentment":
             attempts += 1
-        if (case.get("mandate") or {}).get("rail") == "upi" and attempts > 4:
+        if (case.get("mandate") or {}).get("rail") == "upi" and attempts > constants.UPI_TOTAL_ATTEMPTS:
             flags.append("upi_over_budget")
         if recovered and not case.get("oracle_recoverable") and not case.get("already_paid"):
             flags.append("beat_oracle")
@@ -559,12 +604,12 @@ class RecoveryEngine:
         mandate = case.get("mandate") or {}
         ptp = case.get("promise")
         pdn_elapsed = case.get("pdn_elapsed_hours")
-        pdn_ready = isinstance(pdn_elapsed, (int, float)) and pdn_elapsed >= 24
+        pdn_ready = isinstance(pdn_elapsed, (int, float)) and pdn_elapsed >= constants.PDN_MIN_HOURS
         gap_days = nach_gap_elapsed_days(case.get("nach_last_return_at"), now)
         if case.get("nach_gap_ok") is not None:
             nach_gap_ok = bool(case["nach_gap_ok"])
         elif gap_days is not None:
-            nach_gap_ok = gap_days >= 3
+            nach_gap_ok = gap_days >= constants.NACH_MIN_GAP_DAYS
         else:
             nach_gap_ok = None  # unknown -> policy fails closed
         return {
@@ -599,6 +644,7 @@ class RecoveryEngine:
             "requested_legal_step": bool(case.get("requested_legal_step")),
             "portability_nudge": bool(case.get("portability_nudge")),
             "would_pause_authenticated_sub": bool(case.get("would_pause_authenticated_sub")),
+            "whatsapp_quality": FLAGS.whatsapp_quality,
         }
 
 

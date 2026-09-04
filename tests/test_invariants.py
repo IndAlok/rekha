@@ -33,6 +33,9 @@ def test_dnd_no_customer_channel():
     result, _ = _run("dnd")
     assert result.proposal.get("channel") not in {"sms", "whatsapp", "email", "voice"}
     assert "contacted_dnd" not in result.violations
+    assert result.verdict["effect"] == "DENY"
+    assert result.verdict["reason_code"] == "SUPPRESSED"
+    assert not result.executed
 
 
 def test_never_pause_authenticated():

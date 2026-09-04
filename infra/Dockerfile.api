@@ -3,7 +3,7 @@ WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY apps/api ./apps/api
 COPY packages ./packages
-RUN pip install --no-cache-dir -e ".[postgres]" && mkdir -p /app/artifacts/eval
+RUN pip install --no-cache-dir -e ".[postgres,razorpay]" && mkdir -p /app/artifacts/eval
 ENV PYTHONPATH=/app/apps/api
 ENV AUTO_EVAL_ON_BOOT=true
 EXPOSE 8080

@@ -23,6 +23,7 @@ def isolated_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
 
     FLAGS.kill_switch = False
     FLAGS.complaints = []
+    FLAGS.whatsapp_quality = "green"
 
     from rekha import policy as policy_mod
 
@@ -33,6 +34,11 @@ def isolated_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     api_module.STATE["audit"] = api_module.AuditChain()
     api_module.STATE["latest"] = None
     api_module.STATE["mtime"] = None
+    api_module.STATE["boot_ok"] = True
+    api_module.STATE["boot_errors"] = []
+    api_module.STATE["payments_error"] = None
+    api_module.STATE["payments_fallback"] = False
+    api_module.STATE["payments_adapter_effective"] = "sandbox"
 
     yield
 

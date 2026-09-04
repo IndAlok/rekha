@@ -9,8 +9,19 @@ def _id(prefix: str, key: str) -> str:
     return f"{prefix}_{digest}"
 
 
+class UnavailablePayments:
+    """Fail-closed stand-in when razorpay_test cannot start in prod."""
+
+    def __getattr__(self, name: str) -> Any:
+        raise RuntimeError("payments_adapter_unavailable")
+
+
 class RazorpaySandbox:
-    def __init__(self, budget: int = 30) -> None:
+    def __init__(self, budget: int | None = None) -> None:
+        if budget is None:
+            from rekha.config import settings
+
+            budget = settings.payment_link_budget
         self.budget = budget
         self.links: dict[str, dict] = {}
         self.payments: dict[str, dict] = {}

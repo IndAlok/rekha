@@ -20,4 +20,9 @@ describe("redact", () => {
   test("off leaves values", () => {
     expect(redact({ last4: "4242" }, false)).toEqual({ last4: "4242" })
   })
+  test("masks last_name", () => {
+    const out = redact({ last_name: "Sharma", first_name: "Riya" }, true) as { last_name: string; first_name: string }
+    expect(out.last_name).toContain("••••")
+    expect(out.first_name).toContain("••••")
+  })
 })

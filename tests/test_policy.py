@@ -2,6 +2,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import pytest
+from rekha import constants
 from rekha.policy import PolicyEngine
 
 IST = ZoneInfo("Asia/Kolkata")
@@ -30,6 +31,7 @@ def _ctx(**kwargs):
         "requested_legal_step": False,
         "portability_nudge": False,
         "would_pause_authenticated_sub": False,
+        "whatsapp_quality": "green",
     }
     base.update(kwargs)
     return base
@@ -118,3 +120,70 @@ def test_voice_high_value_approval(eng):
         NOW,
     )
     assert v.effect == "REQUIRE_APPROVAL"
+
+
+def test_silent_retry_revoked_is_deny(eng):
+    v = eng.evaluate({"action": "silent_retry_same_instrument"}, _ctx(consent_status="REVOKED"), NOW)
+    assert v.effect == "DENY"
+    assert v.reason_code == "CONSENT_REVOKED"
+
+
+def test_silent_retry_dnd_is_deny(eng):
+    v = eng.evaluate({"action": "silent_retry_same_instrument"}, _ctx(suppressed=True), NOW)
+    assert v.effect == "DENY"
+    assert v.reason_code == "SUPPRESSED"
+
+
+def test_paylink_revoked_without_channel(eng):
+    v = eng.evaluate({"action": "create_payment_link"}, _ctx(consent_status="REVOKED"), NOW)
+    assert v.effect == "DENY"
+    assert v.reason_code == "CONSENT_REVOKED"
+
+
+def test_presentment_skips_quiet_hours(eng):
+    v = eng.evaluate(
+        {"action": "schedule_mandate_presentment", "channel": "sms"},
+        _ctx(
+            local_hour=22,
+            mandate_rail="upi",
+            mandate_attempts_used=1,
+            in_upi_peak=False,
+            pdn_ready=True,
+            pdn_elapsed_hours=36,
+            customer_confirmed_funds=True,
+        ),
+        datetime(2026, 8, 22, 22, 0, tzinfo=IST),
+    )
+    assert v.reason_code != "QUIET_HOURS"
+
+
+def test_rules_bind_constants(eng):
+    quiet = next(r for r in eng.doc["rules"] if r["id"] == "QUIET_HOURS_IST")
+    assert quiet["when"]["local_hour"]["not_in_range"] == [
+        constants.CONTACT_WINDOW_START,
+        constants.CONTACT_WINDOW_END,
+    ]
+    high = next(r for r in eng.doc["rules"] if r["id"] == "HIGH_VALUE_APPROVAL")
+    assert high["when"]["amount_paise"]["gt"] == int(constants.CAPS["high_value_approval_paise"])
+
+
+def test_high_value_follows_caps(monkeypatch):
+    monkeypatch.setitem(constants.CAPS, "high_value_approval_paise", 100)
+    eng = PolicyEngine()
+    v = eng.evaluate(
+        {"action": "create_payment_link", "channel": "email", "amount_paise": 101},
+        _ctx(amount_paise=101),
+        NOW,
+    )
+    assert v.effect == "REQUIRE_APPROVAL"
+    assert v.reason_code == "AMOUNT_ABOVE_AUTO_THRESHOLD"
+
+
+def test_whatsapp_red_defers(eng):
+    v = eng.evaluate(
+        {"action": "send_template_message", "channel": "whatsapp"},
+        _ctx(whatsapp_quality="red"),
+        NOW,
+    )
+    assert v.effect == "DEFER"
+    assert v.reason_code == "WHATSAPP_QUALITY_RED"

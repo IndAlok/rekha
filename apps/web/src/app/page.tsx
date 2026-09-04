@@ -20,27 +20,39 @@ export default function OverviewPage() {
   const [ledger, setLedger] = useState<{ agent_paise: number; self_cure_paise: number; entries: number } | null>(null)
   const [err, setErr] = useState<unknown>(null)
 
-  const load = useCallback(() => {
+  const load = useCallback((signal?: AbortSignal) => {
     setErr(null)
-    Promise.all([api.report(), api.cases()])
+    Promise.all([api.report(signal), api.cases({ signal })])
       .then(([r, c]) => {
+        if (signal?.aborted) return
         setReport(r)
         setCases(c)
       })
       .catch((e) => {
+        if (signal?.aborted) return
         setReport(null)
         setCases(null)
         setErr(e)
       })
-    api.status().then(setStatus).catch(() => setStatus(null))
-    api.ledger().then((row) => setLedger(row.totals)).catch(() => setLedger(null))
+    api.status(signal).then((row) => {
+      if (!signal?.aborted) setStatus(row)
+    }).catch(() => {
+      if (!signal?.aborted) setStatus(null)
+    })
+    api.ledger(undefined, signal).then((row) => {
+      if (!signal?.aborted) setLedger(row.totals)
+    }).catch(() => {
+      if (!signal?.aborted) setLedger(null)
+    })
   }, [])
 
   useEffect(() => {
-    load()
+    const ctrl = new AbortController()
+    load(ctrl.signal)
+    return () => ctrl.abort()
   }, [load])
 
-  if (err) return <EvalGate error={err} onReady={load} />
+  if (err) return <EvalGate error={err} onReady={() => load()} />
   if (!report || !cases) {
     return (
       <>

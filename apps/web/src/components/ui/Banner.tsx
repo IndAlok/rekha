@@ -6,5 +6,10 @@ export function Banner({
   children: React.ReactNode
 }) {
   const cls = kind === "info" ? "banner" : `banner ${kind}`
-  return <div className={cls}>{children}</div>
+  const role = kind === "danger" || kind === "warn" ? "alert" : "status"
+  return (
+    <div className={cls} role={role}>
+      {children}
+    </div>
+  )
 }

@@ -5,7 +5,7 @@ export PYTHONPATH := apps/api:$(PYTHONPATH)
 
 install:
 	$(PY) -m pip install -e ".[dev]"
-	cd apps/web && npm install
+	cd apps/web && ( [ -f package-lock.json ] && npm ci || npm install )
 
 seed:
 	$(PY) -m rekha.cli seed

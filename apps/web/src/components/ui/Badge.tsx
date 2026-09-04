@@ -30,7 +30,3 @@ export function Badge({
   const resolved = tone || TONE[key] || "neutral"
   return <span className={`badge badge-${resolved}`}>{children}</span>
 }
-
-export function effectTone(effect?: string) {
-  return effect || "n/a"
-}

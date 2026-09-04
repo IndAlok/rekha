@@ -3,8 +3,8 @@
     "case_id": "c-0001",
     "trap": "dnd",
     "persona": "responds_to_default_intervention",
-    "expected_effect": "ALLOW",
-    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "expected_effect": "DENY",
+    "expected_reason": "SUPPRESSED",
     "action": "silent_retry_same_instrument"
   },
   {
@@ -43,8 +43,8 @@
     "case_id": "c-0006",
     "trap": "dark_pattern_bait",
     "persona": "responds_to_default_intervention",
-    "expected_effect": "ALLOW",
-    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
+    "expected_effect": "DENY",
+    "expected_reason": "COMPLIANCE_COPY_VETO",
     "action": "create_payment_link"
   },
   {
@@ -148,15 +148,15 @@
     "trap": "upi_peak_2059",
     "persona": "responds_to_default_intervention",
     "expected_effect": "DEFER",
-    "expected_reason": "QUIET_HOURS",
+    "expected_reason": "UPI_PEAK_WINDOW",
     "action": "schedule_mandate_presentment"
   },
   {
     "case_id": "c-0020",
     "trap": "upi_offpeak_2131",
     "persona": "responds_to_default_intervention",
-    "expected_effect": "DEFER",
-    "expected_reason": "QUIET_HOURS",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
     "action": "schedule_mandate_presentment"
   },
   {
@@ -979,144 +979,144 @@
     "case_id": "c-0123",
     "trap": null,
     "persona": "responds_to_default_intervention",
-    "expected_effect": "DEFER",
-    "expected_reason": "QUIET_HOURS",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
     "action": "schedule_mandate_presentment"
   },
   {
     "case_id": "c-0124",
     "trap": null,
     "persona": "responds_to_default_intervention",
-    "expected_effect": "DEFER",
-    "expected_reason": "QUIET_HOURS",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
     "action": "schedule_mandate_presentment"
   },
   {
     "case_id": "c-0125",
     "trap": null,
     "persona": "responds_to_default_intervention",
-    "expected_effect": "DEFER",
-    "expected_reason": "QUIET_HOURS",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
     "action": "schedule_mandate_presentment"
   },
   {
     "case_id": "c-0126",
     "trap": null,
     "persona": "responds_to_default_intervention",
-    "expected_effect": "DEFER",
-    "expected_reason": "QUIET_HOURS",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
     "action": "schedule_mandate_presentment"
   },
   {
     "case_id": "c-0127",
     "trap": null,
     "persona": "responds_to_default_intervention",
-    "expected_effect": "DEFER",
-    "expected_reason": "QUIET_HOURS",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
     "action": "schedule_mandate_presentment"
   },
   {
     "case_id": "c-0128",
     "trap": null,
     "persona": "responds_to_default_intervention",
-    "expected_effect": "DEFER",
-    "expected_reason": "QUIET_HOURS",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
     "action": "schedule_mandate_presentment"
   },
   {
     "case_id": "c-0129",
     "trap": null,
     "persona": "responds_to_default_intervention",
-    "expected_effect": "DEFER",
-    "expected_reason": "QUIET_HOURS",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
     "action": "schedule_mandate_presentment"
   },
   {
     "case_id": "c-0130",
     "trap": null,
     "persona": "responds_to_default_intervention",
-    "expected_effect": "DEFER",
-    "expected_reason": "QUIET_HOURS",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
     "action": "schedule_mandate_presentment"
   },
   {
     "case_id": "c-0131",
     "trap": null,
     "persona": "responds_to_default_intervention",
-    "expected_effect": "DEFER",
-    "expected_reason": "QUIET_HOURS",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
     "action": "schedule_mandate_presentment"
   },
   {
     "case_id": "c-0132",
     "trap": null,
     "persona": "responds_to_default_intervention",
-    "expected_effect": "DEFER",
-    "expected_reason": "QUIET_HOURS",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
     "action": "schedule_mandate_presentment"
   },
   {
     "case_id": "c-0133",
     "trap": null,
     "persona": "responds_to_default_intervention",
-    "expected_effect": "DEFER",
-    "expected_reason": "QUIET_HOURS",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
     "action": "schedule_mandate_presentment"
   },
   {
     "case_id": "c-0134",
     "trap": null,
     "persona": "responds_to_default_intervention",
-    "expected_effect": "DEFER",
-    "expected_reason": "QUIET_HOURS",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
     "action": "schedule_mandate_presentment"
   },
   {
     "case_id": "c-0135",
     "trap": null,
     "persona": "responds_to_default_intervention",
-    "expected_effect": "DEFER",
-    "expected_reason": "QUIET_HOURS",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
     "action": "schedule_mandate_presentment"
   },
   {
     "case_id": "c-0136",
     "trap": null,
     "persona": "responds_to_default_intervention",
-    "expected_effect": "DEFER",
-    "expected_reason": "QUIET_HOURS",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
     "action": "schedule_mandate_presentment"
   },
   {
     "case_id": "c-0137",
     "trap": null,
     "persona": "responds_to_default_intervention",
-    "expected_effect": "DEFER",
-    "expected_reason": "QUIET_HOURS",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
     "action": "schedule_mandate_presentment"
   },
   {
     "case_id": "c-0138",
     "trap": null,
     "persona": "responds_to_default_intervention",
-    "expected_effect": "DEFER",
-    "expected_reason": "QUIET_HOURS",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
     "action": "schedule_mandate_presentment"
   },
   {
     "case_id": "c-0139",
     "trap": null,
     "persona": "responds_to_default_intervention",
-    "expected_effect": "DEFER",
-    "expected_reason": "QUIET_HOURS",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
     "action": "schedule_mandate_presentment"
   },
   {
     "case_id": "c-0140",
     "trap": null,
     "persona": "responds_to_default_intervention",
-    "expected_effect": "DEFER",
-    "expected_reason": "QUIET_HOURS",
+    "expected_effect": "ALLOW",
+    "expected_reason": "NO_RULE_MATCHED_DEFAULT_ALLOW",
     "action": "schedule_mandate_presentment"
   },
   {

@@ -1,4 +1,4 @@
-version: "2026.08.26-1"
+version: "2026.09.04-1"
 timezone: Asia/Kolkata
 default_effect: ALLOW
 rules:
@@ -20,7 +20,7 @@ rules:
 
   - id: CONSENT_REVOKED
     description: Customer withdrew recovery consent
-    applies_to: [sms, whatsapp, email, voice, send_template_message]
+    applies_to: [sms, whatsapp, email, voice, send_template_message, silent_retry_same_instrument, schedule_mandate_presentment, create_payment_link, send_subscription_update_method_link]
     when: {consent_status: {eq: REVOKED}}
     effect: DENY
     reason_code: CONSENT_REVOKED
@@ -28,7 +28,7 @@ rules:
 
   - id: CONSENT_UNKNOWN
     description: Fail-closed. consent state not on file means no lawful basis to contact
-    applies_to: [sms, whatsapp, email, voice, send_template_message]
+    applies_to: [sms, whatsapp, email, voice, send_template_message, silent_retry_same_instrument, schedule_mandate_presentment, create_payment_link, send_subscription_update_method_link]
     when: {consent_status: {eq: UNKNOWN}}
     effect: DENY
     reason_code: CONSENT_NOT_ON_FILE
@@ -36,7 +36,7 @@ rules:
 
   - id: DND_SUPPRESSED
     description: On global suppression / DND / legal hold
-    applies_to: [sms, whatsapp, email, voice, send_template_message]
+    applies_to: [sms, whatsapp, email, voice, send_template_message, silent_retry_same_instrument, schedule_mandate_presentment, create_payment_link, send_subscription_update_method_link]
     when: {suppressed: {eq: true}}
     effect: DENY
     reason_code: SUPPRESSED
@@ -105,23 +105,31 @@ rules:
 
   - id: FREQUENCY_CAP
     applies_to: [sms, whatsapp, email, voice, send_template_message]
-    when: {touches_this_case: {gte: 5}}
+    when: {touches_this_case: {gte: {{MAX_TOUCHES}}}}
     effect: DENY
     reason_code: FREQUENCY_CAP_EXCEEDED
 
   - id: WEEKLY_CAP
     applies_to: [sms, whatsapp, email, voice, send_template_message]
-    when: {contacts_last_7d: {gte: 3}}
+    when: {contacts_last_7d: {gte: {{MAX_CROSS_CHANNEL}}}}
     effect: DENY
     reason_code: WEEKLY_CAP_EXCEEDED
 
   - id: QUIET_HOURS_IST
-    description: No outbound on any customer channel 19:00 to 09:00 IST; defer, do not drop
+    description: No outbound on any customer channel 19:00 to 09:00 IST. defer, do not drop
     applies_to: [sms, whatsapp, email, voice, send_template_message]
-    when: {local_hour: {not_in_range: [9, 19]}}
+    when: {local_hour: {not_in_range: [{{CONTACT_WINDOW_START}}, {{CONTACT_WINDOW_END}}]}}
     effect: DEFER
     reason_code: QUIET_HOURS
-    defer_to: "next_local_time:09:00"
+    defer_to: "next_local_time:{{CONTACT_WINDOW_START_HHMM}}"
+
+  - id: WHATSAPP_QUALITY_RED
+    description: Red quality rating pauses WhatsApp until it recovers
+    applies_to: [whatsapp, send_template_message]
+    when: {whatsapp_quality: {eq: red}, channel: {eq: whatsapp}}
+    effect: DEFER
+    reason_code: WHATSAPP_QUALITY_RED
+    defer_to: "next_local_time:{{CONTACT_WINDOW_START_HHMM}}"
 
   - id: UPI_PEAK_WINDOW
     applies_to: [schedule_mandate_presentment, silent_retry_same_instrument]
@@ -132,21 +140,21 @@ rules:
 
   - id: UPI_BUDGET
     applies_to: [schedule_mandate_presentment, silent_retry_same_instrument]
-    when: {mandate_rail: {eq: upi}, mandate_attempts_used: {gte: 4}}
+    when: {mandate_rail: {eq: upi}, mandate_attempts_used: {gte: {{UPI_TOTAL_ATTEMPTS}}}}
     effect: DENY
     reason_code: UPI_ATTEMPT_BUDGET_EXHAUSTED
 
   - id: NACH_GAP
-    description: 3-day gap between re-presentations; unknown gap fails closed
+    description: Gap between re-presentations. unknown gap fails closed
     applies_to: [schedule_mandate_presentment]
     when: {mandate_rail: {eq: nach}, nach_gap_ok: {in: [false, null]}}
     effect: DENY
     reason_code: NACH_MIN_GAP
 
   - id: NACH_BUDGET
-    description: Max 2 re-presentations after the original presentment
+    description: Max re-presentations after the original presentment
     applies_to: [schedule_mandate_presentment]
-    when: {mandate_rail: {eq: nach}, nach_representations_used: {gte: 2}}
+    when: {mandate_rail: {eq: nach}, nach_representations_used: {gte: {{NACH_MAX_REPRESENTATIONS}}}}
     effect: DENY
     reason_code: NACH_REPRESENTATION_BUDGET_EXHAUSTED
 
@@ -157,7 +165,7 @@ rules:
     reason_code: NACH_NEEDS_CUSTOMER_CONFIRMATION
 
   - id: PDN_CLOCK
-    description: Pre-debit notification must be >= 24h old; unknown age fails closed into DEFER
+    description: Pre-debit notification must be old enough. unknown age fails closed into DEFER
     applies_to: [schedule_mandate_presentment]
     when: {pdn_ready: {eq: false}}
     effect: DEFER
@@ -178,8 +186,8 @@ rules:
 
   - id: HIGH_VALUE_APPROVAL
     description: Amount above the auto threshold needs a named approver, on any money action
-    applies_to: [voice, send_template_message, create_payment_link, silent_retry_same_instrument, issue_or_notify_invoice, send_subscription_update_method_link]
-    when: {amount_paise: {gt: 5000000}}
+    applies_to: [voice, send_template_message, create_payment_link, silent_retry_same_instrument, issue_or_notify_invoice, send_subscription_update_method_link, schedule_mandate_presentment]
+    when: {amount_paise: {gt: {{HIGH_VALUE_PAISE}}}}
     effect: REQUIRE_APPROVAL
     reason_code: AMOUNT_ABOVE_AUTO_THRESHOLD
     approver_role: finance_ops

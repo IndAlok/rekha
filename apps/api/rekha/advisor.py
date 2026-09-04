@@ -79,4 +79,12 @@ def filter_proposal(proposal: dict | None) -> dict | None:
         return None
     if proposal.get("action") not in CLOSED_TOOLS:
         return None
-    return proposal
+    out: dict = {"action": proposal["action"]}
+    if proposal.get("reason"):
+        out["reason"] = proposal["reason"]
+    extra = proposal.get("extra") if isinstance(proposal.get("extra"), dict) else {}
+    send_after = extra.get("send_after") or proposal.get("send_after")
+    if send_after:
+        out["send_after"] = send_after
+        out["extra"] = {"send_after": send_after}
+    return out

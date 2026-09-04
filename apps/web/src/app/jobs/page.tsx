@@ -71,6 +71,7 @@ export default function JobsPage() {
               <th>status</th>
               <th>attempts</th>
               <th>run at</th>
+              <th>lease</th>
               <th />
             </tr>
           </thead>
@@ -87,6 +88,7 @@ export default function JobsPage() {
                 <Td>{j.status}</Td>
                 <Td className="tabular">{j.attempts}</Td>
                 <Td className="muted">{dt(j.run_at)}</Td>
+                <Td className="muted">{j.lease_expires_at ? dt(j.lease_expires_at) : "n/a"}</Td>
                 <Td>
                   {j.status === "pending" || j.status === "running" ? (
                     <ConfirmButton

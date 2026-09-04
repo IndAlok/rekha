@@ -1,44 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { api, type Status } from "@/lib/api"
+import { type Status } from "@/lib/api"
 
 type Phase = "pending" | "up" | "down"
 
-export function StatusBar() {
-  const [phase, setPhase] = useState<Phase>("pending")
-  const [status, setStatus] = useState<Status | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    const tick = () => {
-      if (document.hidden) return
-      api
-        .status()
-        .then((row) => {
-          if (cancelled) return
-          setStatus(row)
-          setPhase("up")
-        })
-        .catch(() => {
-          if (cancelled) return
-          setStatus(null)
-          setPhase("down")
-        })
-    }
-    tick()
-    const id = setInterval(tick, 8000)
-    const vis = () => {
-      if (!document.hidden) tick()
-    }
-    document.addEventListener("visibilitychange", vis)
-    return () => {
-      cancelled = true
-      clearInterval(id)
-      document.removeEventListener("visibilitychange", vis)
-    }
-  }, [])
-
+export function StatusBar({ status, phase }: { status: Status | null; phase: Phase }) {
   const evalUp = Boolean(status?.eval_ready)
   return (
     <span className="btn-row">

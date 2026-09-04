@@ -40,7 +40,7 @@ export function setMaskPii(on: boolean): void {
   }
 }
 
-const PII_KEYS = new Set(["contact", "phone", "email", "last4", "first_name", "vpa", "mobile"])
+const PII_KEYS = new Set(["contact", "phone", "email", "last4", "first_name", "last_name", "name", "vpa", "mobile"])
 
 export function maskValue(key: string, value: unknown): unknown {
   if (!PII_KEYS.has(key) || value == null) return value

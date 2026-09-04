@@ -901,9 +901,35 @@ class ConsentStore:
         if not stored:
             return case
         out = {**case, "consent_status": stored["consent_status"]}
-        if stored.get("silent") or stored.get("opt_out"):
+        if stored.get("silent") or stored.get("opt_out") or stored.get("dnd"):
             out["suppressed"] = True
+        if stored.get("dnd"):
+            out["dnd"] = True
+        if stored.get("legal_hold"):
+            out["legal_hold"] = True
         return out
+
+    @staticmethod
+    def set_flags(
+        customer_id: str,
+        *,
+        dnd: bool | None = None,
+        legal_hold: bool | None = None,
+        opt_out: bool | None = None,
+        merchant_id: str = "merch_demo",
+    ) -> dict:
+        with session_scope() as session:
+            row = session.get(Customer, customer_id)
+            if row is None:
+                row = Customer(id=customer_id, merchant_id=merchant_id)
+                session.add(row)
+            if dnd is not None:
+                row.dnd = bool(dnd)
+            if legal_hold is not None:
+                row.legal_hold = bool(legal_hold)
+            if opt_out is not None:
+                row.opt_out = bool(opt_out)
+            return ConsentStore._as_dict(row)
 
     @staticmethod
     def _as_dict(row: Customer) -> dict:
@@ -915,6 +941,7 @@ class ConsentStore:
             "consent_withdrawn_at": _iso(row.consent_withdrawn_at),
             "opt_out": row.opt_out,
             "dnd": row.dnd,
+            "legal_hold": bool(getattr(row, "legal_hold", False)),
         }
 
 

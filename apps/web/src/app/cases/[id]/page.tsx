@@ -95,13 +95,13 @@ export default function CaseDetailPage() {
         <Panel title="Rekha">
           <KeyVal
             rows={[
-              ["Class", row.diagnosis?.recoverability_class],
-              ["Engine", row.proposal?.engine],
-              ["Action", row.proposal?.action],
-              ["Channel", row.proposal?.channel],
-              ["Reason", row.verdict?.reason_code],
-              ["Recovered", row.recovered ? `yes (${row.recovery_source})` : "no"],
-              ["Scheduled", row.scheduled ? "yes" : "no"],
+              ["Class", shown.diagnosis?.recoverability_class],
+              ["Engine", shown.proposal?.engine],
+              ["Action", shown.proposal?.action],
+              ["Channel", shown.proposal?.channel],
+              ["Reason", shown.verdict?.reason_code],
+              ["Recovered", shown.recovered ? `yes (${shown.recovery_source})` : "no"],
+              ["Scheduled", shown.scheduled ? "yes" : "no"],
             ]}
           />
         </Panel>
@@ -130,7 +130,7 @@ export default function CaseDetailPage() {
           ]}
         />
       </div>
-      {tab === "trail" && <Trail row={row} />}
+      {tab === "trail" && <Trail row={shown} />}
       {tab === "verdict" && (
         <Panel title="Verdict">
           <JsonView value={shown.verdict} label="verdict" />

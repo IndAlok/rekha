@@ -60,9 +60,15 @@ export default function ApprovalsPage() {
         reload()
       })
       .catch((e) => {
-        if (e instanceof ApiError && (e.code === "KILL_SWITCH" || e.status === 409)) {
+        if (e instanceof ApiError && e.code === "KILL_SWITCH") {
           setKillBanner(true)
-          toast("bad", "Kill switch is engaged or policy changed")
+          toast("bad", "Kill switch is engaged")
+        } else if (e instanceof ApiError && e.code === "POLICY_CHANGED") {
+          toast("bad", "Policy changed since this request. Rejected.")
+          reload()
+        } else if (e instanceof ApiError && e.code === "APPROVAL_CLOSED") {
+          toast("bad", "This approval is already closed")
+          reload()
         } else {
           toast("bad", e instanceof Error ? e.message : String(e))
         }
@@ -101,7 +107,7 @@ export default function ApprovalsPage() {
       />
       {killBanner ? (
         <Banner kind="danger">
-          Approve was blocked. Kill switch is on, or the world moved and policy now DENYs. Check <Link href="/ops">Status</Link>.
+          Approve was blocked. Kill switch is on. Check <Link href="/ops">Status</Link>.
         </Banner>
       ) : null}
       {err ? <Banner kind="danger">{err instanceof Error ? err.message : String(err)}</Banner> : null}

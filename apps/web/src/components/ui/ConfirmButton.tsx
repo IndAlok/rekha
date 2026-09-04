@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "./Button"
 
 export function ConfirmButton({
@@ -19,6 +19,16 @@ export function ConfirmButton({
   danger?: boolean
 }) {
   const [armed, setArmed] = useState(false)
+
+  useEffect(() => {
+    if (!armed) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setArmed(false)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [armed])
+
   if (!armed) {
     return (
       <Button variant={danger ? "danger" : variant} disabled={busy} onClick={() => setArmed(true)}>

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime, timedelta
+from functools import lru_cache
 from zoneinfo import ZoneInfo
 
 from rekha import constants
+from rekha.paths import FIXTURES_DIR
 
 IST = ZoneInfo("Asia/Kolkata")
 
@@ -89,3 +92,20 @@ def nach_gap_elapsed_days(last_return_at: datetime | None, now: datetime) -> flo
     if last_return_at is None:
         return None
     return (as_ist(now) - as_ist(last_return_at)).total_seconds() / 86400
+
+
+@lru_cache(maxsize=1)
+def _holiday_dates() -> frozenset[str]:
+    path = FIXTURES_DIR / "holidays_in_2026.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return frozenset()
+    dates = data.get("dates") if isinstance(data, dict) else None
+    if not isinstance(dates, list):
+        return frozenset()
+    return frozenset(str(d) for d in dates)
+
+
+def is_bank_holiday(ts: datetime) -> bool:
+    return as_ist(ts).date().isoformat() in _holiday_dates()

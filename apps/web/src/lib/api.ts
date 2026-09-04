@@ -87,6 +87,12 @@ export type Status = {
   ops_auth_required?: boolean
   webhook_secret_set?: boolean
   payments_adapter?: string
+  payments_adapter_effective?: string
+  payments_fallback?: boolean
+  payments_error?: string | null
+  boot_ok?: boolean
+  boot_errors?: string[]
+  whatsapp_quality?: string
   database?: string
   degradation?: Array<Record<string, unknown>>
 }
@@ -260,10 +266,15 @@ async function post<T>(path: string, body?: unknown): Promise<T> {
 }
 
 export const api = {
-  health: (signal?: AbortSignal) => get<{ ok: boolean; kill_switch: boolean }>("/health", signal),
   status: (signal?: AbortSignal) => get<Status>("/status", signal),
   report: (signal?: AbortSignal) => get<Report>("/eval/latest", signal),
-  cases: (signal?: AbortSignal) => get<CaseRow[]>("/cases", signal),
+  cases: (opts?: { trap?: string | null; blocked?: boolean; signal?: AbortSignal }) => {
+    const q = new URLSearchParams()
+    if (opts?.trap) q.set("trap", opts.trap)
+    if (opts?.blocked) q.set("blocked", "true")
+    const qs = q.toString()
+    return get<CaseRow[]>(`/cases${qs ? `?${qs}` : ""}`, opts?.signal)
+  },
   case: (id: string, signal?: AbortSignal) => get<CaseRow>(`/cases/${encodeURIComponent(id)}`, signal),
   neighbors: (id: string, signal?: AbortSignal) =>
     get<{ prev: string | null; next: string | null }>(`/cases/${encodeURIComponent(id)}/neighbors`, signal),
@@ -274,8 +285,7 @@ export const api = {
     get<{ ok: boolean; msg: string; rows: Array<Record<string, unknown>>; source?: string }>("/audit", signal),
   verify: () => post<{ ok: boolean; msg: string; rows: number }>("/audit/verify"),
   tamper: () => post<{ ok: boolean; msg: string; tampered_seq: number }>("/audit/tamper"),
-  kill: (engaged: boolean) => post<{ kill_switch: boolean }>("/kill-switch", { engaged }),
-  killState: (signal?: AbortSignal) => get<{ kill_switch: boolean }>("/kill-switch", signal),
+  kill: (engaged: boolean) => post<{ kill_switch: boolean; persisted?: boolean }>("/kill-switch", { engaged }),
   runEval: (seed = 42) => post<Report>(`/eval/run?seed=${seed}`),
   runCase: (body: { case_id?: string; case?: Record<string, unknown> }) =>
     post<CaseRow & { approval_id?: string }>("/cases/run", body),
@@ -304,9 +314,14 @@ export const api = {
     const q = customerId ? `?customer_id=${encodeURIComponent(customerId)}` : ""
     return get<Record<string, unknown>>(`/complaints/state${q}`, signal)
   },
+  fileComplaint: (customerId: string) => post<{ ok: boolean; throttled: boolean }>("/complaints", { customer_id: customerId }),
   customer: (id: string, signal?: AbortSignal) => get<Record<string, unknown>>(`/customers/${encodeURIComponent(id)}`, signal),
   setConsent: (id: string, status: "GRANTED" | "REVOKED" | "UNKNOWN") =>
     post<Record<string, unknown>>(`/customers/${encodeURIComponent(id)}/consent`, { status }),
+  setCustomerFlags: (id: string, flags: { dnd?: boolean; legal_hold?: boolean; opt_out?: boolean }) =>
+    post<Record<string, unknown>>(`/ops/customers/${encodeURIComponent(id)}/flags`, flags),
+  setWhatsappQuality: (quality: "green" | "yellow" | "red") =>
+    post<{ whatsapp_quality: string; persisted?: boolean }>("/ops/whatsapp-quality", { quality }),
   signWebhook: (payload: unknown) => post<{ signature: string }>("/webhooks/sign", payload),
   webhook: async (payload: unknown, eventId?: string, signature?: string) => {
     let sig = signature?.trim() || ""
@@ -330,7 +345,8 @@ export const api = {
         body: JSON.stringify(payload),
         signal: AbortSignal.timeout(20_000),
       })
-    } catch {
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") throw e
       throw new ApiError("API_UNREACHABLE", "The API is not reachable from this page")
     }
     if (!res.ok) throw await parseError(res)

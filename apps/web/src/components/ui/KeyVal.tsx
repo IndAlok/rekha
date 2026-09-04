@@ -4,7 +4,7 @@ export function KeyVal({ rows }: { rows: Array<[string, React.ReactNode]> }) {
       {rows.map(([k, v]) => (
         <div key={k} style={{ display: "contents" }}>
           <dt>{k}</dt>
-          <dd>{v || "n/a"}</dd>
+          <dd>{v == null || v === "" ? "n/a" : v}</dd>
         </div>
       ))}
     </dl>

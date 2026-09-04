@@ -8,7 +8,7 @@ payable to a micro/small enterprise beyond the s.15 window are deductible
 only in the year actually paid. the buyer's own tax exposure.
 
 The agent computes and states facts. It never drafts legal notices and
-never implies criminal liability (see COMPLIANCE.md).
+never implies criminal liability. See packages/policy/constants.yaml legal.
 """
 
 from __future__ import annotations

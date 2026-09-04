@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { Badge } from "@/components/ui/Badge"
+import { Banner } from "@/components/ui/Banner"
 import { EmptyState } from "@/components/ui/EmptyState"
 import { PageHeader } from "@/components/ui/PageHeader"
 import { Table, Td } from "@/components/ui/DataTable"
@@ -17,7 +18,7 @@ export default function LivePage() {
   return (
     <>
       <PageHeader title="Live cases" lede="Webhook and /cases/run traffic. Survives a restart." />
-      {err ? <p className="bad">{err instanceof Error ? err.message : String(err)}</p> : null}
+      {err ? <Banner kind="danger">{err instanceof Error ? err.message : String(err)}</Banner> : null}
       {loading && rows.length === 0 ? <TableSkeleton /> : null}
       {!loading && rows.length === 0 ? (
         <EmptyState title="No live cases yet">Send a payment.failed fixture from the webhook console.</EmptyState>
@@ -32,6 +33,7 @@ export default function LivePage() {
               <th className="num">amount</th>
               <th>touches</th>
               <th>recovered</th>
+              <th>stop</th>
               <th>updated</th>
             </tr>
           </thead>
@@ -52,6 +54,7 @@ export default function LivePage() {
                 <Td>
                   {r.recovered ? "yes" : "no"} {r.recovery_source}
                 </Td>
+                <Td className="muted">{r.stop_reason || ""}</Td>
                 <Td className="muted">{ago(r.updated_at)}</Td>
               </tr>
             ))}

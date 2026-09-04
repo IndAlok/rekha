@@ -32,28 +32,38 @@ export default function WebhooksPage() {
   const [recent, setRecent] = useState<InboxRow[]>([])
   const [busy, setBusy] = useState(false)
 
-  const loadSample = (name: Sample) => {
+  const loadSample = (name: Sample, signal?: AbortSignal) => {
     setSample(name)
     api
-      .sampleWebhook(name)
+      .sampleWebhook(name, signal)
       .then((s) => setBody(JSON.stringify(s, null, 2)))
-      .catch((e) => setErr(e instanceof Error ? e.message : String(e)))
+      .catch((e) => {
+        if (e instanceof DOMException && e.name === "AbortError") return
+        setErr(e instanceof Error ? e.message : String(e))
+      })
   }
 
-  const refreshRecent = () => {
+  const refreshRecent = (signal?: AbortSignal) => {
     api
-      .recentWebhooks(15)
+      .recentWebhooks(15, signal)
       .then((r) => setRecent(r.rows))
-      .catch(() => setRecent([]))
+      .catch((e) => {
+        if (e instanceof DOMException && e.name === "AbortError") return
+        setRecent([])
+      })
   }
 
   useEffect(() => {
-    loadSample("payment_failed")
-    refreshRecent()
+    const ctrl = new AbortController()
+    loadSample("payment_failed", ctrl.signal)
+    refreshRecent(ctrl.signal)
     const id = setInterval(() => {
       if (!document.hidden) refreshRecent()
     }, 8000)
-    return () => clearInterval(id)
+    return () => {
+      ctrl.abort()
+      clearInterval(id)
+    }
   }, [])
 
   const send = async (id: string) => {

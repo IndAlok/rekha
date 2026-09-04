@@ -1,16 +1,20 @@
-import { dirname } from "node:path"
-import { fileURLToPath } from "node:url"
-import { FlatCompat } from "@eslint/eslintrc"
+import nextVitals from "eslint-config-next/core-web-vitals"
 
-const compat = new FlatCompat({
-  baseDirectory: dirname(fileURLToPath(import.meta.url)),
-})
+const vitals = Array.isArray(nextVitals) ? nextVitals : [nextVitals]
 
 const eslintConfig = [
   {
     ignores: [".next/**", "node_modules/**", "playwright-report/**", "test-results/**"],
   },
-  ...compat.extends("next/core-web-vitals"),
+  ...vitals,
+  {
+    rules: {
+      // Next 16's hooks plugin flags mount fetches and fn refs. Those are how the desk loads data.
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/refs": "off",
+      "react-hooks/use-memo": "off",
+    },
+  },
 ]
 
 export default eslintConfig

@@ -5,6 +5,7 @@ import { Suspense, useEffect, useMemo, useRef } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { EvalGate } from "@/components/EvalGate"
 import { Badge } from "@/components/ui/Badge"
+import { EmptyState } from "@/components/ui/EmptyState"
 import { Pager, Table, Td, Th, Tr } from "@/components/ui/DataTable"
 import { PageHeader } from "@/components/ui/PageHeader"
 import { SegmentedControl } from "@/components/ui/SegmentedControl"
@@ -18,11 +19,16 @@ type SortKey = "case_id" | "amount_paise" | "effect" | "engine"
 type Rec = "all" | "yes" | "no"
 
 function CasesInner() {
-  const { data: rows, err, loading, reload } = useFetch((signal) => api.cases(signal))
   const params = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
   const searchRef = useRef<HTMLInputElement>(null)
+  const trap = params.get("trap") || ""
+  const blocked = params.get("blocked") === "1" || params.get("blocked") === "true"
+  const { data: rows, err, loading, reload } = useFetch(
+    (signal) => api.cases({ trap: trap || undefined, blocked: blocked || undefined, signal }),
+    { deps: [trap, blocked] },
+  )
 
   const q = params.get("q") || ""
   const engine = params.get("engine") || "all"
@@ -131,6 +137,8 @@ function CasesInner() {
       </div>
       {loading ? (
         <TableSkeleton />
+      ) : shown.length === 0 ? (
+        <EmptyState title="No cases match">Clear a filter or wait for eval to finish.</EmptyState>
       ) : (
         <>
           <Table>

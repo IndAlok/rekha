@@ -50,6 +50,8 @@ class Executor:
     def execute(self, case: dict, proposal: dict, verdict, now) -> dict:
         action = proposal.get("action")
         channel = proposal.get("channel")
+        if action in {"silent_retry_same_instrument", "schedule_mandate_presentment"}:
+            channel = None
 
         if action not in CLOSED_TOOLS:
             return {"ok": False, "reason": "tool_not_in_allowlist", "action": action}
@@ -168,6 +170,13 @@ class Executor:
                 return {"ok": False, "reason": "double_charge_guard", "action": action}
             if action == "silent_retry_same_instrument":
                 return self._silent_retry(case, notes, channel)
+            return {
+                "ok": True,
+                "action": action,
+                "channel": None,
+                "notes": notes,
+                "silent": True,
+            }
         template_id = proposal.get("template_id")
         if template_id and template_id in TEMPLATES and channel in CUSTOMER_CHANNELS:
             values = {

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Suspense } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Badge } from "@/components/ui/Badge"
+import { Banner } from "@/components/ui/Banner"
 import { Button } from "@/components/ui/Button"
 import { EmptyState } from "@/components/ui/EmptyState"
 import { PageHeader } from "@/components/ui/PageHeader"
@@ -64,7 +65,7 @@ function LedgerInner() {
           </Button>
         }
       />
-      {err ? <p className="bad">{err instanceof Error ? err.message : String(err)}</p> : null}
+      {err ? <Banner kind="danger">{err instanceof Error ? err.message : String(err)}</Banner> : null}
       <div className="quartet">
         <div className="stat">
           <p className="cap">Attributed to agent</p>

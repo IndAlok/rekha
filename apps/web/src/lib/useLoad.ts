@@ -66,10 +66,3 @@ export function useFetch<T>(fn: (signal?: AbortSignal) => Promise<T>, opts: Opts
 
   return { data, err, loading, reload, setData }
 }
-
-export function useLoad<T>(fn: () => Promise<T>, deps: unknown[] = []) {
-  return useFetch((signal) => {
-    void signal
-    return fn()
-  }, { deps })
-}

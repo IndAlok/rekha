@@ -8,11 +8,12 @@ import { ConfirmButton } from "@/components/ui/ConfirmButton"
 import { Field } from "@/components/ui/Field"
 import { PageHeader } from "@/components/ui/PageHeader"
 import { Panel } from "@/components/ui/Panel"
+import { SegmentedControl } from "@/components/ui/SegmentedControl"
 import { Table, Td } from "@/components/ui/DataTable"
 import { useToast } from "@/components/ui/Toast"
 import { ApiError, api, inr } from "@/lib/api"
 import { dt } from "@/lib/format"
-import { getMaskPii, getOpsToken, setMaskPii, setOpsToken } from "@/lib/prefs"
+import { getMaskPii, getOpsToken, redact, setMaskPii, setOpsToken } from "@/lib/prefs"
 import { useFetch } from "@/lib/useLoad"
 
 export default function OpsPage() {
@@ -117,7 +118,8 @@ export default function OpsPage() {
         </div>
         <p className="lede" style={{ marginTop: 10 }}>
           Auth required: {status?.ops_auth_required ? "yes" : "no (dev with empty OPS_TOKEN)"}. Webhook secret:{" "}
-          {status?.webhook_secret_set ? "set" : "absent"}. Payments adapter: {status?.payments_adapter || "sandbox"}.
+          {status?.webhook_secret_set ? "set" : "absent"}. Payments: {status?.payments_adapter_effective || status?.payments_adapter || "sandbox"}
+          {status?.payments_fallback ? " (fell back to sandbox)" : ""}. WhatsApp {status?.whatsapp_quality || "green"}.
         </p>
       </Panel>
       <Panel title="Display">
@@ -174,7 +176,8 @@ export default function OpsPage() {
                   api.customer(custId.trim()).catch((e) => ({ error: e instanceof Error ? e.message : String(e) })),
                   api.complaints(custId.trim()),
                 ])
-                setCustOut(JSON.stringify({ customer: c, complaints: p }, null, 2))
+                const payload = { customer: c, complaints: p }
+                setCustOut(JSON.stringify(mask ? redact(payload, true) : payload, null, 2))
               } catch (e) {
                 setCustOut(e instanceof Error ? e.message : String(e))
               }
@@ -187,7 +190,7 @@ export default function OpsPage() {
               if (!custId.trim()) return
               try {
                 const row = await api.setConsent(custId.trim(), "REVOKED")
-                setCustOut(JSON.stringify(row, null, 2))
+                setCustOut(JSON.stringify(mask ? redact(row, true) : row, null, 2))
                 toast("ok", "Consent revoked")
               } catch (e) {
                 toast("bad", e instanceof Error ? e.message : String(e))
@@ -196,8 +199,111 @@ export default function OpsPage() {
           >
             Revoke consent
           </Button>
+          <Button
+            onClick={async () => {
+              if (!custId.trim()) return
+              try {
+                const row = await api.setCustomerFlags(custId.trim(), { dnd: true })
+                setCustOut(JSON.stringify(mask ? redact(row, true) : row, null, 2))
+                toast("ok", "DND on")
+              } catch (e) {
+                toast("bad", e instanceof Error ? e.message : String(e))
+              }
+            }}
+          >
+            Set DND
+          </Button>
+          <Button
+            onClick={async () => {
+              if (!custId.trim()) return
+              try {
+                const row = await api.setCustomerFlags(custId.trim(), { legal_hold: true })
+                setCustOut(JSON.stringify(mask ? redact(row, true) : row, null, 2))
+                toast("ok", "Legal hold on")
+              } catch (e) {
+                toast("bad", e instanceof Error ? e.message : String(e))
+              }
+            }}
+          >
+            Legal hold
+          </Button>
+          <Button
+            onClick={async () => {
+              if (!custId.trim()) return
+              try {
+                const row = await api.setCustomerFlags(custId.trim(), { opt_out: true })
+                setCustOut(JSON.stringify(mask ? redact(row, true) : row, null, 2))
+                toast("ok", "Opt-out on")
+              } catch (e) {
+                toast("bad", e instanceof Error ? e.message : String(e))
+              }
+            }}
+          >
+            Opt out
+          </Button>
+          <Button
+            onClick={async () => {
+              if (!custId.trim()) return
+              try {
+                const row = await api.fileComplaint(custId.trim())
+                setCustOut(JSON.stringify(row, null, 2))
+                toast("ok", row.throttled ? "Complaint recorded. Circuit open." : "Complaint recorded")
+              } catch (e) {
+                toast("bad", e instanceof Error ? e.message : String(e))
+              }
+            }}
+          >
+            File complaint
+          </Button>
         </div>
         {custOut ? <pre className="json" style={{ marginTop: 12 }}>{custOut}</pre> : null}
+      </Panel>
+      <Panel title="WhatsApp quality">
+        <p className="lede">Red DEFERS WhatsApp. Default is green.</p>
+        <div style={{ marginTop: 12 }}>
+          <SegmentedControl
+            ariaLabel="WhatsApp quality"
+            value={(status?.whatsapp_quality as "green" | "yellow" | "red") || "green"}
+            onChange={async (v) => {
+              try {
+                await api.setWhatsappQuality(v)
+                reload()
+                toast("ok", `WhatsApp ${v}`)
+              } catch (e) {
+                toast("bad", e instanceof Error ? e.message : String(e))
+              }
+            }}
+            options={[
+              { id: "green", label: "Green" },
+              { id: "yellow", label: "Yellow" },
+              { id: "red", label: "Red" },
+            ]}
+          />
+        </div>
+      </Panel>
+      <Panel title="Degraded slices">
+        {(status?.degradation?.length ?? 0) === 0 ? (
+          <p className="muted">No degraded slices.</p>
+        ) : (
+          <Table>
+            <thead>
+              <tr>
+                <th>slice</th>
+                <th className="num">attempts</th>
+                <th className="num">rupees at risk</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(status?.degradation || []).map((row, i) => (
+                <tr key={String(row.key || i)}>
+                  <Td className="mono">{String(row.slice || row.key || "n/a")}</Td>
+                  <Td className="num">{String(row.attempts ?? "")}</Td>
+                  <Td className="num">{inr(Number(row.rupees_at_risk_paise || row.rupees_at_risk || 0))}</Td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        )}
       </Panel>
       <Panel title="Ledger" actions={<Link href="/ledger">Open ledger</Link>}>
         <p>

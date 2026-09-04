@@ -5,6 +5,7 @@ import { Suspense, useMemo } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { EvalGate } from "@/components/EvalGate"
 import { Badge } from "@/components/ui/Badge"
+import { EmptyState } from "@/components/ui/EmptyState"
 import { PageHeader } from "@/components/ui/PageHeader"
 import { Table, Td } from "@/components/ui/DataTable"
 import { TableSkeleton } from "@/components/ui/Skeleton"
@@ -48,7 +49,10 @@ function ComplianceInner() {
         </select>
       </div>
       {loading ? <TableSkeleton /> : null}
-      {!loading ? (
+      {!loading && shown.length === 0 ? (
+        <EmptyState title="No blocked actions">Eval DENY rows land here. Try another rule filter.</EmptyState>
+      ) : null}
+      {!loading && shown.length > 0 ? (
         <Table>
           <thead>
             <tr>
