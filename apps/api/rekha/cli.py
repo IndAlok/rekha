@@ -96,7 +96,7 @@ def cmd_seed() -> int:
 
 
 def cmd_eval(seed: int) -> int:
-    payload = run_eval(seed=seed, write=False, write_golden=False)
+    payload = run_eval(seed=seed, write=True, write_golden=False)
     report = payload["report"]
     print(f"n={report['n']} incremental_inr={report['incremental_paise']/100:.2f}")
     print(f"rekha={report['rekha_recovered_paise']/100:.2f} holdout={report['holdout_recovered_paise']/100:.2f} oracle={report['oracle_recovered_paise']/100:.2f}")

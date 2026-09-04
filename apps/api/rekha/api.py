@@ -146,9 +146,12 @@ def _ensure_latest(*, run_if_missing: bool) -> dict:
         loaded = _load_from_disk()
         if loaded is not None:
             return loaded
+        cached = STATE.get("latest")
+        if _payload_ok(cached):
+            return cached
         if not run_if_missing:
             raise _http(404, "EVAL_MISSING", "No eval report yet. Use Run eval.")
-        payload = run_eval(seed=42, write=False, write_golden=False)
+        payload = run_eval(seed=42, write=True, write_golden=False)
         if not _payload_ok(payload):
             raise _http(500, "EVAL_BROKEN", "Eval finished but the report was unreadable.")
         STATE["latest"] = payload
@@ -334,6 +337,8 @@ def status() -> dict:
     path = eval_artifact_path()
     with _LOCK:
         latest = _load_from_disk()
+        if latest is None and _payload_ok(STATE.get("latest")):
+            latest = STATE["latest"]
     from rekha.degradation import MONITOR
 
     scheduler_up = _SCHEDULER is not None and not _SCHEDULER._stop.is_set()
@@ -699,7 +704,7 @@ def eval_run(seed: int = 42) -> dict:
     if seed < 0:
         raise _http(400, "BAD_SEED", "seed must be zero or greater")
     try:
-        payload = run_eval(seed=seed, write=False, write_golden=False)
+        payload = run_eval(seed=seed, write=True, write_golden=False)
     except Exception as exc:
         raise _http(500, "EVAL_FAILED", "eval failed") from exc
     if not _payload_ok(payload):

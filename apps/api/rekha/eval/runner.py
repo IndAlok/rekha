@@ -15,7 +15,7 @@ from rekha.sandbox import FileInbox, RazorpaySandbox
 
 def run_eval(*, seed: int = 42, write: bool = True, write_golden: bool = False) -> dict:
     cases = generate_cohort(seed)
-    if write:
+    if write_golden:
         FIXTURES_DIR.mkdir(parents=True, exist_ok=True)
         _write_jsonl(FIXTURES_DIR / "cohort_200.jsonl", cases)
 
@@ -193,8 +193,8 @@ def run_eval(*, seed: int = 42, write: bool = True, write_golden: bool = False) 
         (out / "latest.json").write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
         (out / "report.md").write_text(_markdown(report), encoding="utf-8")
         (out / "audit.json").write_text(json.dumps(audit.rows, indent=2, default=str), encoding="utf-8")
-        if write_golden:
-            _write_golden(cases, rekha_rows)
+    if write_golden:
+        _write_golden(cases, rekha_rows)
     return payload
 
 
