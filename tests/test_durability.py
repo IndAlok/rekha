@@ -3,6 +3,9 @@ charge guard, kill-switch persistence. all survive a 'restart'."""
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
+from rekha import store as store_mod
 from rekha.reservations import Slot
 from rekha.store import (
     CaseStore,
@@ -113,6 +116,21 @@ def test_case_close_and_live_listing():
     rows = CaseStore.live_cases()
     match = [r for r in rows if r["case_id"] == "case-live-1"]
     assert match and match[0]["recovered"] is True and match[0]["status"] == "recovered"
+
+
+def test_upsert_refreshes_live_order(monkeypatch):
+    clock = {"n": datetime(2026, 9, 5, 10, 0, tzinfo=UTC)}
+
+    def fake_now():
+        clock["n"] = clock["n"] + timedelta(seconds=1)
+        return clock["n"]
+
+    monkeypatch.setattr(store_mod, "_now", fake_now)
+    CaseStore.upsert({"id": "case-live-old", "customer_id": "cust", "amount_paise": 100})
+    CaseStore.upsert({"id": "case-live-new", "customer_id": "cust", "amount_paise": 200})
+    CaseStore.upsert({"id": "case-live-old", "customer_id": "cust", "amount_paise": 100})
+    ids = [r["case_id"] for r in CaseStore.live_cases()]
+    assert ids.index("case-live-old") < ids.index("case-live-new")
 
 
 def test_ledger_records_and_totals():

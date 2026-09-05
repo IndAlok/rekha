@@ -330,6 +330,7 @@ class CaseStore:
                         row.first_failed_at = _now()
                 else:
                     row.first_failed_at = _now()
+            row.updated_at = _now()
 
     @staticmethod
     def bump_mandate(case_id: str, *, upi: bool = False, nach: bool = False) -> None:
@@ -458,6 +459,7 @@ class CaseStore:
         with session_scope() as session:
             row = session.get(RecoveryCase, case["id"])
             if row is not None:
+                row.updated_at = _now()
                 row.payload_json = db_json(
                     {
                         k: case.get(k)
