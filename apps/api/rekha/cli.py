@@ -16,7 +16,7 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     sub.add_parser("seed", help="Write frozen cohort_200.jsonl and holiday fixtures")
-    ev = sub.add_parser("eval", help="Run the 200-case holdout eval (LLM off, no Razorpay keys)")
+    ev = sub.add_parser("eval", help="Run the 200-case holdout eval (Groq off, no Razorpay keys)")
     ev.add_argument("--seed", type=int, default=42)
     av = sub.add_parser("audit-verify", help="Verify the hash-chained audit log")
     av.add_argument("--path", type=Path, default=None)

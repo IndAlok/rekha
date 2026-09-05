@@ -2,9 +2,9 @@
 
 Bounded recovery. Every rupee explained.
 
-The model never moves money. It writes one tool from a closed list. YAML policy says ALLOW, DENY, DEFER, or REQUIRE_APPROVAL. A scheduler runs each action once. A hash chain stores why.
+The model never moves money. On live cases Groq may write a reason if it agrees with the playbook. YAML policy says ALLOW, DENY, DEFER, or REQUIRE_APPROVAL. A scheduler runs each action once. A hash chain stores why. Eval runs with the model off.
 
-Built for the [Razorpay AI Buildathon](https://razorpay.com/buildathon/). Test-mode only. No live keys. No real customer data.
+Built for the [Razorpay AI Buildathon](https://razorpay.com/buildathon/). Test-mode only. No live payment keys. No real customer data.
 
 ## Run
 
@@ -29,14 +29,26 @@ Seed 42, 99 vs 100. Treatment ₹1,22,139, control ₹1,00,028, incremental ₹2
 | `OPS_TOKEN` | empty | required outside dev on every POST except the Razorpay webhook |
 | `RAZORPAY_WEBHOOK_SECRET` | empty | HMAC required outside dev |
 | `PAYMENTS_ADAPTER` | `sandbox` | `razorpay_test` needs `rzp_test_` keys |
-| `OPENAI_API_KEY` | empty | optional advisor. eval stays green without it |
+| `OPENAI_API_KEY` | empty | optional live advisor. names stay OPENAI_* because the HTTP dialect is OpenAI-shaped. Groq is the host. eval never calls it |
+| `OPENAI_BASE_URL` | `https://api.groq.com/openai/v1` | Groq chat completions |
+| `OPENAI_MODEL` | `llama-3.3-70b-versatile` | if Groq rejects JSON mode or the model, Rekha drops `response_format`, then tries `llama-3.1-8b-instant`, then keeps the playbook |
 | `CORS_ORIGINS` | `*` | set this to the desk origin in prod |
 | `AUTO_EVAL_ON_BOOT` | `true` | first boot builds the report |
 
 SMS, WhatsApp, and email stay FileInbox. Copy never names s.138, IBC, or MSME filings. Clocks live in `packages/policy/constants.yaml`.
 
+## Advisor
+
+Live webhooks and `/cases/run` only. `/status` shows provider and model, never the key. The 200-case batch, `rekha eval`, and CI stay off even when the key is in `.env`.
+
+Groq may write a reason when it picks the same tool the playbook already picked. It cannot pick a different tool, change the channel, change the amount, set `send_after`, send a message, retry a card, or open an approval.
+
+Fail closed to the playbook on 401, 429, 5xx, an 8 second timeout, a connect error, or junk JSON. A 400 drops JSON mode, then the 8b model, then silence.
+
+Set the three `OPENAI_*` vars on the API host (Railway). Do not put them on Vercel.
+
 ## Deploy
 
-Desk is at https://rekha-one.vercel.app. API image is `infra/Dockerfile.api`. Point `API_UPSTREAM` at the API origin. Set `REKHA_ENV`, `OPS_TOKEN`, `RAZORPAY_WEBHOOK_SECRET`, and `CORS_ORIGINS` before you expose it.
+Desk is at https://rekha-one.vercel.app. API image is `infra/Dockerfile.api`. Point `API_UPSTREAM` at the API origin. Set `REKHA_ENV`, `OPS_TOKEN`, `RAZORPAY_WEBHOOK_SECRET`, and `CORS_ORIGINS` before you expose it. Optional advisor vars go on the API host only, never on Vercel.
 
 MIT.

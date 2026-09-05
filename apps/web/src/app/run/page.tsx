@@ -101,7 +101,7 @@ export default function RunPage() {
     <>
       <PageHeader
         title="Run case"
-        lede="POST /cases/run against the live engine. High-value voice is how you create an approval. The Awaaz page is the FSM only."
+        lede="POST /cases/run against the live engine. High-value voice is how you create an approval. The Awaaz page is the FSM only. Groq may attach a reason. It cannot pick the tool."
       />
       {err ? <Banner kind="danger">{err}</Banner> : null}
       <Panel

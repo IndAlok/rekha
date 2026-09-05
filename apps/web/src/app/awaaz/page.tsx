@@ -58,7 +58,7 @@ export default function AwaazPage() {
     <>
       <PageHeader
         title="Awaaz"
-        lede="Scripted transcript fixture driven by the real FSM. No audio pipeline is claimed. This page cannot create an approval. For ₹50,001 voice, use Approvals or Run case."
+        lede="Scripted transcript fixture driven by the real FSM. No audio pipeline is claimed. This page cannot create an approval. Groq is not on this path. For ₹50,001 voice, use Approvals or Run case."
         actions={
           <Link className="btn" href="/approvals">
             Open approvals

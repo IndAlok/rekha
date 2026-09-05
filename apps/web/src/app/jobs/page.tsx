@@ -39,7 +39,7 @@ export default function JobsPage() {
 
   return (
     <>
-      <PageHeader title="Jobs" lede="Deferred outreach and send_after. The scheduler claims a lease, retries three times, then marks failed." />
+      <PageHeader title="Jobs" lede="Deferred outreach and send_after from the playbook. Groq cannot enqueue these. The scheduler claims a lease, retries three times, then marks failed." />
       {err ? <Banner kind="danger">{err instanceof Error ? err.message : String(err)}</Banner> : null}
       <div className="filters">
         <SegmentedControl

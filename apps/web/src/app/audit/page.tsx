@@ -56,7 +56,7 @@ export default function AuditPage() {
     <>
       <PageHeader
         title="Audit chain"
-        lede="Hash-linked rows. Tamper flips one action in memory and re-hashes. It does not write the break."
+        lede="Hash-linked rows. Tamper flips one action in memory and re-hashes. It does not write the break. An advisor row is a reason, not a debit."
         actions={
           <div className="btn-row">
             <Button

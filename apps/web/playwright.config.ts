@@ -26,6 +26,7 @@ export default defineConfig({
         PYTHONPATH: path.join(root, "apps/api"),
         REKHA_ENV: "dev",
         OPS_TOKEN: "e2e-secret",
+        OPENAI_API_KEY: "",
       },
     },
     {

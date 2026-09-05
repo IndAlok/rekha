@@ -1,4 +1,4 @@
-"""DLT templates. The model does not write SMS."""
+"""DLT templates. Groq does not write SMS. YAML and these strings do."""
 
 from __future__ import annotations
 

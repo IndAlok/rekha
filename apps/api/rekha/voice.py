@@ -1,6 +1,7 @@
 """Awaaz. Hinglish voice. Every agent line is compliance-scanned before TTS.
 Identity verification is asymmetric. The caller states the secret. The agent
-never reads it out. PII-shaped output is redacted while VERIFYING."""
+never reads it out. PII-shaped output is redacted while VERIFYING.
+Groq is not on this path."""
 
 from __future__ import annotations
 

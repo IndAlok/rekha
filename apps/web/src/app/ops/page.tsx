@@ -35,7 +35,7 @@ export default function OpsPage() {
 
   return (
     <>
-      <PageHeader title="Status" lede="Scheduler drains deferred jobs and re-evaluates policy at dispatch. Kill-switch state persists." />
+      <PageHeader title="Status" lede="Scheduler drains deferred jobs and re-evaluates policy at dispatch. Kill-switch state persists. Advisor is live-only." />
       {err ? <Banner kind="danger">{err instanceof Error ? err.message : String(err)}. Start the API with make api or make serve.</Banner> : null}
       {kill ? <Banner kind="danger">Kill switch is engaged. Outreach and silent retries are blocked.</Banner> : null}
       <div className="grid-3">
@@ -65,6 +65,16 @@ export default function OpsPage() {
             {status?.database || "sqlite"}
           </div>
           <p className="lede">Postgres in production. SQLite when you run make serve.</p>
+        </Panel>
+        <Panel title="Advisor">
+          <div className={`n ${status?.advisor?.configured ? "ok" : ""}`} style={{ fontSize: 24, fontWeight: 650 }}>
+            {status?.advisor?.configured ? status.advisor.provider || "on" : "off"}
+          </div>
+          <p className="lede">
+            {status?.advisor?.configured
+              ? `${status.advisor.model || "model"} on live cases only. Eval stays off. YAML still decides.`
+              : "Set OPENAI_API_KEY on the API host. Default host is Groq. Eval stays off either way."}
+          </p>
         </Panel>
         <Panel title="Kill switch">
           <div className={`n ${kill ? "bad" : "ok"}`} style={{ fontSize: 24, fontWeight: 650 }}>
@@ -119,7 +129,8 @@ export default function OpsPage() {
         <p className="lede" style={{ marginTop: 10 }}>
           Auth required: {status?.ops_auth_required ? "yes" : "no (dev with empty OPS_TOKEN)"}. Webhook secret:{" "}
           {status?.webhook_secret_set ? "set" : "absent"}. Payments: {status?.payments_adapter_effective || status?.payments_adapter || "sandbox"}
-          {status?.payments_fallback ? " (fell back to sandbox)" : ""}. WhatsApp {status?.whatsapp_quality || "green"}.
+          {status?.payments_fallback ? " (fell back to sandbox)" : ""}. WhatsApp {status?.whatsapp_quality || "green"}. Advisor{" "}
+          {status?.advisor?.configured ? `${status.advisor.provider} live-only` : "off"}.
         </p>
       </Panel>
       <Panel title="Display">

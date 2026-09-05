@@ -42,7 +42,7 @@ function LedgerInner() {
     <>
       <PageHeader
         title="Ledger"
-        lede="Agent only after an execute. Self-cure is a payment with no intervention."
+        lede="Agent only after an execute. Self-cure is a payment with no intervention. Groq does not get a ledger row."
         actions={
           <Button
             disabled={rows.length === 0}

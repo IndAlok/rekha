@@ -151,6 +151,11 @@ def test_status_exposes_boot_and_quality():
         assert "whatsapp_quality" in body
         assert "degradation" in body
         assert "payments_adapter_effective" in body
+        assert body["advisor"]["eval"] == "off"
+        assert body["advisor"]["live_only"] is True
+        assert "pick_tool" in body["advisor"]["cannot"]
+        assert "execute" in body["advisor"]["cannot"]
+        assert "gsk_" not in str(body["advisor"])
 
 
 def test_presentment_is_not_customer_contact():

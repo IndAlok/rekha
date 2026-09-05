@@ -96,7 +96,7 @@ export default function WebhooksPage() {
     <>
       <PageHeader
         title="Webhook console"
-        lede="Prod rejects unsigned bodies. Save the ops token on Status, then Send signs the JSON with the webhook secret. Razorpay's own test button signs itself. Replay uses the same event id."
+        lede="Prod rejects unsigned bodies. Save the ops token on Status, then Send signs the JSON with the webhook secret. Razorpay's own test button signs itself. Replay uses the same event id. If the advisor is on, a reason may appear. The tool still came from the playbook."
       />
       {err ? <Banner kind="danger">{err}</Banner> : null}
       {result?.deduped ? <Banner kind="ok">deduped true. Same event id, no second case.</Banner> : null}

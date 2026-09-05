@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
 from rekha import constants
-from rekha.advisor import CLOSED_TOOLS, advise, filter_proposal
+from rekha.advisor import CLOSED_TOOLS, advise, advisor_configured, filter_proposal
 from rekha.audit import AuditChain, canonical
 from rekha.clocks import (
     as_ist,
@@ -92,9 +92,10 @@ class CaseResult:
 class RecoveryEngine:
     """The bounded loop: diagnose -> reconcile -> propose -> policy -> execute.
 
-    `persist=False` (eval) keeps everything in memory and deterministic.
-    `persist=True` (live) additionally writes counters, ledger entries,
-    approvals and scheduled jobs through rekha.store.
+    persist=False (eval) stays in memory and never calls Groq.
+    persist=True (live) may ask Groq for a reason after the playbook
+    picks the tool. YAML still decides. Groq cannot change the tool,
+    channel, amount, or send_after.
     """
 
     def __init__(
@@ -228,19 +229,19 @@ class RecoveryEngine:
         proposal = propose(case, diagnosis, pf, now)
         if proposal.get("action") not in SAFE_INTERNAL_ACTIONS | CLOSED_TOOLS:
             proposal = {"action": "suppress_and_stop", "reason": "action_not_in_allowlist", "engine": "router"}
-        advised = filter_proposal(advise(case, diagnosis.to_dict()))
-        if advised and advised.get("action") == proposal.get("action"):
-            merged = dict(proposal)
-            if advised.get("reason"):
-                merged["reason"] = advised["reason"]
-            extra = advised.get("extra") if isinstance(advised.get("extra"), dict) else {}
-            send_after = extra.get("send_after") or advised.get("send_after")
-            if send_after:
-                merged["send_after"] = send_after
-                merged_extra = dict(proposal.get("extra") or {})
-                merged_extra["send_after"] = send_after
-                merged["extra"] = merged_extra
-            proposal = merged
+        if self.persist and advisor_configured():
+            advised = filter_proposal(advise(case, diagnosis.to_dict()))
+            advisor_meta = {"called": True, "applied": False, "suggested": None}
+            if advised:
+                advisor_meta["suggested"] = advised.get("action")
+                if advised.get("action") == proposal.get("action"):
+                    merged = dict(proposal)
+                    if advised.get("reason"):
+                        merged["reason"] = advised["reason"]
+                    proposal = merged
+                    advisor_meta["applied"] = True
+            proposal["advisor"] = advisor_meta
+            self._audit("advisor", case, advisor_meta)
 
         if case.get("llm_draft"):
             scan = scan_copy(case["llm_draft"], channel=proposal.get("channel") or "email")

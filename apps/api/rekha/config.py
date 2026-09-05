@@ -13,9 +13,10 @@ class Settings(BaseSettings):
     razorpay_key_id: str = ""
     razorpay_key_secret: str = ""
     razorpay_webhook_secret: str = ""
+    # OPENAI_* names. The client is OpenAI-shaped. Default host is Groq.
     openai_api_key: str = ""
-    openai_base_url: str = ""
-    openai_model: str = "gpt-4.1-mini"
+    openai_base_url: str = "https://api.groq.com/openai/v1"
+    openai_model: str = "llama-3.3-70b-versatile"
     comms_adapter: str = "file"
     payment_link_budget: int = 30
     cors_origins: str = "*"

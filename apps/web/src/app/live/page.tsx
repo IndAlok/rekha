@@ -17,7 +17,7 @@ export default function LivePage() {
 
   return (
     <>
-      <PageHeader title="Live cases" lede="Webhook and /cases/run traffic. Survives a restart." />
+      <PageHeader title="Live cases" lede="Webhook and /cases/run traffic. Survives a restart. Groq may rewrite the reason on these rows. The tool still came from the playbook." />
       {err ? <Banner kind="danger">{err instanceof Error ? err.message : String(err)}</Banner> : null}
       {loading && rows.length === 0 ? <TableSkeleton /> : null}
       {!loading && rows.length === 0 ? (

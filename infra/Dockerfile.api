@@ -6,6 +6,8 @@ COPY packages ./packages
 RUN pip install --no-cache-dir -e ".[postgres,razorpay]" && mkdir -p /app/artifacts/eval
 ENV PYTHONPATH=/app/apps/api
 ENV AUTO_EVAL_ON_BOOT=true
+ENV OPENAI_BASE_URL=https://api.groq.com/openai/v1
+ENV OPENAI_MODEL=llama-3.3-70b-versatile
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=3s --start-period=90s --retries=12 \
   CMD python -c "import os,urllib.request; urllib.request.urlopen('http://127.0.0.1:%s/health'%os.environ.get('PORT','8080'), timeout=2)"

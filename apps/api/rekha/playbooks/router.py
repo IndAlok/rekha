@@ -13,6 +13,7 @@ from rekha.taxonomy import Recoverability
 
 
 def propose(case: dict, diagnosis: Diagnosis, preflight: Preflight, now) -> dict:
+    """Closed-list router. Groq may later attach a reason. It cannot pick the tool."""
     if case.get("prefer_voice") and case.get("voice_consent"):
         return propose_voice()
     if case.get("bank_holiday") and case.get("loss_class") == "mandate_retry":

@@ -15,7 +15,11 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: ruff check apps/api tests packages
       - run: pytest -q --cov=rekha --cov-fail-under=85
+        env:
+          OPENAI_API_KEY: ""
       - run: python -m rekha eval
+        env:
+          OPENAI_API_KEY: ""
       - name: eval must not rewrite golden
         run: git diff --exit-code -- packages/fixtures/golden.json
 
@@ -60,3 +64,4 @@ jobs:
           CI: "true"
           NEXT_PUBLIC_API_URL: /api
           API_UPSTREAM: http://127.0.0.1:8080
+          OPENAI_API_KEY: ""

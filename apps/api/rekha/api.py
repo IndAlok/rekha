@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from rekha.advisor import advisor_public
 from rekha.audit import AuditChain, verify_rows
 from rekha.config import cors_origin_list, settings
 from rekha.engine import RecoveryEngine, is_customer_contact
@@ -91,6 +92,7 @@ def _payments():
 
 
 def _live_engine() -> RecoveryEngine:
+    """Webhook and /cases/run path. persist=True is what lets Groq attach a reason."""
     if STATE["engine"] is None:
         STATE["engine"] = RecoveryEngine(
             payments=_payments(),
@@ -362,6 +364,7 @@ def status() -> dict:
         "whatsapp_quality": FLAGS.whatsapp_quality,
         "database": "postgres" if "postgres" in db_url else "sqlite",
         "degradation": MONITOR.ranked_by_rupees()[:8],
+        "advisor": advisor_public(),
     }
 
 
@@ -701,6 +704,7 @@ def batch_ingest(body: BatchIngest) -> dict:
 
 @app.post("/eval/run")
 def eval_run(seed: int = 42) -> dict:
+    """Re-run the holdout batch. persist=False inside run_eval. Groq stays off."""
     if seed < 0:
         raise _http(400, "BAD_SEED", "seed must be zero or greater")
     try:

@@ -16,6 +16,7 @@ def isolated_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     monkeypatch.setattr(settings, "database_url", f"sqlite+pysqlite:///{db_file}")
     monkeypatch.setattr(settings, "rekha_env", "dev")
     monkeypatch.setattr(settings, "ops_token", "")
+    monkeypatch.setattr(settings, "openai_api_key", "")
     db_session.reset_engine()
     from rekha.db.session import init_db
 

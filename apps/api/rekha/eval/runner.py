@@ -14,6 +14,7 @@ from rekha.sandbox import FileInbox, RazorpaySandbox
 
 
 def run_eval(*, seed: int = 42, write: bool = True, write_golden: bool = False) -> dict:
+    """200-case holdout. persist=False, so Groq is never called."""
     cases = generate_cohort(seed)
     if write_golden:
         FIXTURES_DIR.mkdir(parents=True, exist_ok=True)
@@ -23,9 +24,16 @@ def run_eval(*, seed: int = 42, write: bool = True, write_golden: bool = False) 
     inbox = FileInbox()
     sandbox = RazorpaySandbox(budget=0)
     audit = AuditChain()
-    rekha_engine = RecoveryEngine(payments=sandbox, comms=inbox, policy=policy, audit=audit, strategy="rekha")
+    rekha_engine = RecoveryEngine(
+        payments=sandbox, comms=inbox, policy=policy, audit=audit, strategy="rekha", persist=False
+    )
     holdout_engine = RecoveryEngine(
-        payments=RazorpaySandbox(budget=0), comms=FileInbox(), policy=policy, audit=AuditChain(), strategy="holdout"
+        payments=RazorpaySandbox(budget=0),
+        comms=FileInbox(),
+        policy=policy,
+        audit=AuditChain(),
+        strategy="holdout",
+        persist=False,
     )
 
     rekha_rows = []
@@ -159,6 +167,7 @@ def run_eval(*, seed: int = 42, write: bool = True, write_golden: bool = False) 
             (r.case_id for r in rekha_rows if r.recovered and r.proposal.get("engine") == "payment_doctor"),
             rekha_rows[0].case_id if rekha_rows else None,
         ),
+        "advisor": "off",
     }
 
     cases_out = []
@@ -301,6 +310,10 @@ strategy (assignment amount-stratified, hash tie-break, fixed at cohort build).
 ## Honesty
 
 {report["mde_honesty"]["note"]}
+
+## Advisor
+
+Off. This batch never called Groq. Live cases may attach a reason if the model agrees with the playbook. The tool still came from the playbook.
 
 ## Invariants
 

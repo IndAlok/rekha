@@ -50,7 +50,7 @@ export type CaseRow = {
   scheduled?: boolean
   executed?: boolean
   violations: string[]
-  proposal: { action?: string; engine?: string; channel?: string; reason?: string }
+  proposal: { action?: string; engine?: string; channel?: string; reason?: string; advisor?: { called?: boolean; applied?: boolean; suggested?: string | null } }
   verdict: { effect?: string; reason_code?: string; matched_rules?: unknown[]; policy_version?: string; policy_hash?: string }
   diagnosis: { recoverability_class?: string; error_reason?: string }
   trap?: string
@@ -95,6 +95,17 @@ export type Status = {
   whatsapp_quality?: string
   database?: string
   degradation?: Array<Record<string, unknown>>
+  advisor?: {
+    configured?: boolean
+    provider?: string
+    model?: string
+    live_only?: boolean
+    eval?: string
+    timeout_s?: number
+    fallback_model?: string
+    can?: string[]
+    cannot?: string[]
+  }
 }
 
 export type Approval = {

@@ -23,7 +23,7 @@ export default function PolicyPage() {
         title="Policy"
         lede={
           data
-            ? `Version ${data.version}. Hash ${hashShort(data.policy_hash)}. YAML decides. The model does not.`
+            ? `Version ${data.version}. Hash ${hashShort(data.policy_hash)}. YAML decides. The model may write a reason. It cannot pick a different tool.`
             : "Loading policy."
         }
       />

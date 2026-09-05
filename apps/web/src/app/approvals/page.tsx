@@ -93,7 +93,7 @@ export default function ApprovalsPage() {
     <>
       <PageHeader
         title="Approvals"
-        lede="A human decides. The executor runs, or the case closes. Pending rows auto-deny after 2 days. Awaaz cannot create these."
+        lede="A human decides. The executor runs, or the case closes. Pending rows auto-deny after 2 days. Awaaz cannot create these. Groq cannot create these."
         actions={
           <div className="btn-row">
             <Link className="btn" href="/run">

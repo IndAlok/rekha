@@ -83,6 +83,8 @@ test("status page shows env pills", async ({ page }) => {
   await page.goto("/ops")
   await expect(page.getByRole("heading", { name: "Status" })).toBeVisible()
   await expect(page.getByText(/Ops token/)).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Advisor" })).toBeVisible()
+  await expect(page.getByText("advisor off")).toBeVisible()
 })
 
 test("missing token prompts on mutating call", async ({ page }) => {

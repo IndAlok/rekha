@@ -159,7 +159,16 @@ function Trail({ row }: { row: CaseRow }) {
             },
             {
               title: "Propose",
-              body: `${row.proposal?.action || "none"} via ${row.proposal?.channel || "none"}`,
+              body: `${row.proposal?.action || "none"} via ${row.proposal?.channel || "none"}${row.proposal?.reason ? `. ${row.proposal.reason}` : ""}`,
+              extra: row.proposal?.advisor ? (
+                <p className="lede" style={{ marginTop: 6 }}>
+                  {row.proposal.advisor.applied
+                    ? "Advisor agreed. Reason kept. Tool still came from the playbook."
+                    : row.proposal.advisor.suggested
+                      ? `Advisor suggested ${row.proposal.advisor.suggested}. Playbook kept.`
+                      : "Advisor called. Playbook kept the tool."}
+                </p>
+              ) : null,
             },
             {
               title: "Policy",

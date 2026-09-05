@@ -24,6 +24,7 @@ htmlcov/
 .web/
 .zrok/
 scripts/demo-recording.md
+scripts/submission.md
 playwright-report/
 test-results/
 blob-report/
