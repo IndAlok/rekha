@@ -10,10 +10,41 @@ def _id(prefix: str, key: str) -> str:
 
 
 class UnavailablePayments:
-    """Fail-closed stand-in when razorpay_test cannot start in prod."""
+    """Stand-in when razorpay_test cannot start in prod.
+
+    Methods the engine probes with hasattr must exist. Raising from
+    __getattr__ turns hasattr(seed_entity) into a 500 on every webhook.
+    """
+
+    created_links = 0
+    budget = 0
+
+    def seed_entity(self, kind: str, entity_id: str, payload: dict) -> None:
+        return None
+
+    def fetch_payment(self, payment_id: str) -> dict[str, Any] | None:
+        return None
+
+    def fetch_order(self, order_id: str) -> dict[str, Any] | None:
+        return None
+
+    def fetch_subscription(self, subscription_id: str) -> dict[str, Any] | None:
+        return None
+
+    def fetch_invoice(self, invoice_id: str) -> dict[str, Any] | None:
+        return None
+
+    def fetch_payment_link(self, link_id: str) -> dict[str, Any] | None:
+        return None
+
+    def retry_payment(self, payment_id: str, notes: dict | None = None) -> dict[str, Any]:
+        return {"ok": False, "reason": "payments_adapter_unavailable", "simulated": False, "payment_id": payment_id}
+
+    def list_unpaid_invoices(self, subscription_id: str) -> list[dict[str, Any]]:
+        return []
 
     def __getattr__(self, name: str) -> Any:
-        raise RuntimeError("payments_adapter_unavailable")
+        raise AttributeError(name)
 
 
 class RazorpaySandbox:

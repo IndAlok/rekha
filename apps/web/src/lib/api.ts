@@ -221,6 +221,10 @@ export async function parseError(res: Response): Promise<ApiError> {
     if (typeof detail === "string") {
       return new ApiError(res.status === 404 ? "NOT_FOUND" : "HTTP_ERROR", detail, res.status)
     }
+    const nested = body.error
+    if (nested && typeof nested === "object" && nested.code) {
+      return new ApiError(String(nested.code), String(nested.message || nested.code), res.status)
+    }
   } catch {
     /* body was not json */
   }

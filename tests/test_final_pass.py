@@ -90,6 +90,7 @@ def test_razorpay_unavailable_in_prod(monkeypatch):
     monkeypatch.setattr(settings, "razorpay_key_id", "")
     pay = api_mod._payments()
     assert isinstance(pay, UnavailablePayments)
+    assert hasattr(pay, "seed_entity") is True
     assert api_mod.STATE["payments_adapter_effective"] == "unavailable"
     assert api_mod.STATE["payments_error"]
 

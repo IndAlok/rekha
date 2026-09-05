@@ -31,4 +31,14 @@ describe("parseError", () => {
     const err = await parseError(res)
     expect(err.code).toBe("POLICY_CHANGED")
   })
+
+  test("nested error.code from a proxy 500", async () => {
+    const res = new Response(JSON.stringify({ error: { code: "INTERNAL_ERROR", message: "Function timed out" } }), {
+      status: 500,
+      headers: { "content-type": "application/json" },
+    })
+    const err = await parseError(res)
+    expect(err.code).toBe("INTERNAL_ERROR")
+    expect(err.message).toMatch(/timed out/i)
+  })
 })

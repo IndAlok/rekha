@@ -1,6 +1,12 @@
 {
   "event": "payment.failed",
   "payload": {
+    "customer": {
+      "id": "cust_demo_failed",
+      "name": "Riya",
+      "contact": "+919800000001",
+      "consent": true
+    },
     "payment": {
       "entity": {
         "id": "pay_demo_failed",

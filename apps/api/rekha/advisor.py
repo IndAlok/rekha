@@ -16,7 +16,7 @@ log = logging.getLogger("rekha.advisor")
 GROQ_BASE = "https://api.groq.com/openai/v1"
 GROQ_MODEL = "llama-3.3-70b-versatile"
 GROQ_FALLBACK_MODEL = "llama-3.1-8b-instant"
-ADVISOR_TIMEOUT_S = 8.0
+ADVISOR_TIMEOUT_S = 2.5
 
 CLOSED_TOOLS = {
     "silent_retry_same_instrument",
@@ -175,8 +175,8 @@ def advise(case: dict, diagnosis: dict) -> dict | None:
                 log.warning("advisor unreachable, playbook keeps the tool")
                 return None
             except Exception as exc:  # noqa: BLE001
-                last_error = type(exc).__name__
-                continue
+                log.warning("advisor %s, playbook keeps the tool", type(exc).__name__)
+                return None
     if last_error:
         log.warning("advisor gave up: %s", last_error)
     return None

@@ -9,7 +9,7 @@ from typing import Any
 
 
 def canonical(payload: dict[str, Any]) -> str:
-    return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False, default=str)
 
 
 def chain_hash(prev_hash: str, payload: dict[str, Any]) -> str:

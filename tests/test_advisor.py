@@ -25,7 +25,7 @@ def test_advisor_defaults_to_groq():
     assert pub["provider"] == "off"
     assert pub["eval"] == "off"
     assert pub["live_only"] is True
-    assert pub["timeout_s"] == 8.0
+    assert pub["timeout_s"] == 2.5
     assert pub["fallback_model"] == GROQ_FALLBACK_MODEL
     assert "reason_if_same_action" in pub["can"]
     assert "pick_tool" in pub["cannot"]
@@ -258,6 +258,28 @@ def test_live_engine_disagreement_keeps_playbook(monkeypatch):
     assert result.proposal["reason"] == "playbook"
     assert result.proposal["advisor"]["applied"] is False
     assert result.proposal["advisor"]["suggested"] == "create_payment_link"
+
+
+def test_live_engine_advisor_raise_keeps_playbook(monkeypatch):
+    monkeypatch.setattr(settings, "openai_api_key", "gsk_test")
+
+    def boom(*_a, **_k):
+        raise RuntimeError("groq down")
+
+    monkeypatch.setattr("rekha.engine.advise", boom)
+    result = _live_engine().run_case(_case(), _now())
+    assert result.proposal["action"] == "silent_retry_same_instrument"
+    assert result.proposal["advisor"]["called"] is True
+    assert result.proposal["advisor"]["applied"] is False
+    assert result.proposal["advisor"]["error"] == "RuntimeError"
+
+
+def test_advise_unexpected_exception_does_not_retry(monkeypatch):
+    monkeypatch.setattr(settings, "openai_api_key", "gsk_test")
+    post = MagicMock(side_effect=RuntimeError("boom"))
+    monkeypatch.setattr(httpx, "post", post)
+    assert advise({"id": "c1"}, {}) is None
+    assert post.call_count == 1
 
 
 class SimpleStatus:

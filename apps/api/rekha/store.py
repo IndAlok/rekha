@@ -412,7 +412,14 @@ class CaseStore:
             start = _aware(row.first_failed_at)
             if start is None:
                 return None
-            return max(0.0, (now - start).total_seconds() / 3600.0)
+            try:
+                return max(0.0, (now - start).total_seconds() / 3600.0)
+            except TypeError:
+                aware_now = _aware(now) or _now()
+                aware_start = _aware(start)
+                if aware_start is None:
+                    return None
+                return max(0.0, (aware_now - aware_start).total_seconds() / 3600.0)
 
     @staticmethod
     def close(case_id: str, *, recovered: bool, source: str, stop_reason: str | None = None) -> None:

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
+export const maxDuration = 60
 
 const DROP = new Set([
   "connection",
@@ -35,7 +36,7 @@ async function proxy(req: NextRequest, ctx: { params: Promise<{ path: string[] }
   req.headers.forEach((value, key) => {
     if (!DROP.has(key.toLowerCase())) headers.set(key, value)
   })
-  const long = joined === "eval/run" || joined.startsWith("eval/run?")
+  const long = joined === "eval/run" || joined.startsWith("eval/run?") || joined === "webhooks/razorpay"
   try {
     const res = await fetch(dest, {
       method: req.method,

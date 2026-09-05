@@ -230,8 +230,12 @@ class RecoveryEngine:
         if proposal.get("action") not in SAFE_INTERNAL_ACTIONS | CLOSED_TOOLS:
             proposal = {"action": "suppress_and_stop", "reason": "action_not_in_allowlist", "engine": "router"}
         if self.persist and advisor_configured():
-            advised = filter_proposal(advise(case, diagnosis.to_dict()))
-            advisor_meta = {"called": True, "applied": False, "suggested": None}
+            advisor_meta: dict = {"called": True, "applied": False, "suggested": None}
+            advised = None
+            try:
+                advised = filter_proposal(advise(case, diagnosis.to_dict()))
+            except Exception as exc:  # noqa: BLE001
+                advisor_meta["error"] = type(exc).__name__
             if advised:
                 advisor_meta["suggested"] = advised.get("action")
                 if advised.get("action") == proposal.get("action"):
@@ -664,13 +668,17 @@ class RecoveryEngine:
     def _seed_world(self, case: dict) -> None:
         refs = case.get("source_refs") or {}
         live = case.get("live_statuses") or {}
-        if not hasattr(self.payments, "seed_entity"):
+        seeder = getattr(type(self.payments), "seed_entity", None)
+        if not callable(seeder):
             return
 
         def _merge(kind: str, entity_id: str, patch: dict) -> None:
-            store = getattr(self.payments, f"{kind}s")
-            existing = store.get(entity_id) or {}
-            store[entity_id] = {**existing, **patch}
+            store = getattr(self.payments, f"{kind}s", None)
+            if isinstance(store, dict):
+                existing = store.get(entity_id) or {}
+                store[entity_id] = {**existing, **patch}
+                return
+            seeder(self.payments, kind, entity_id, patch)
 
         if refs.get("payment_id"):
             status = live.get("payment") or ("authorized" if case.get("already_paid") else "failed")

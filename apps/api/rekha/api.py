@@ -162,11 +162,41 @@ def _ensure_latest(*, run_if_missing: bool) -> dict:
         return payload
 
 
+def _fail_closed_result(event_id: str, exc: BaseException) -> dict:
+    return {
+        "case_id": f"evt-{event_id}",
+        "strategy": "rekha",
+        "diagnosis": {},
+        "proposal": {"action": "suppress_and_stop", "reason": "process_error", "engine": "ingest"},
+        "verdict": {
+            "effect": "DENY",
+            "reason_code": "PROCESS_ERROR",
+            "matched_rules": [],
+            "policy_version": "",
+            "policy_hash": "",
+        },
+        "executed": False,
+        "recovered": False,
+        "recovery_source": "none",
+        "amount_paise": 0,
+        "violations": [],
+        "blocked": True,
+        "deferred": False,
+        "scheduled": False,
+        "execution": None,
+        "notes": [type(exc).__name__],
+    }
+
+
 def _process_event(event_id: str, event_type: str, payload: dict) -> dict:
-    engine = _live_engine()
-    inner = payload.get("payload") if isinstance(payload.get("payload"), dict) else payload
-    case = event_to_case({"event_id": event_id, "event_type": event_type, "payload": inner})
-    return engine.run_case(case, wall_now()).to_dict()
+    try:
+        engine = _live_engine()
+        inner = payload.get("payload") if isinstance(payload.get("payload"), dict) else payload
+        case = event_to_case({"event_id": event_id, "event_type": event_type, "payload": inner})
+        return engine.run_case(case, wall_now()).to_dict()
+    except Exception as exc:
+        log.exception("webhook process failed event_id=%s", event_id)
+        return _fail_closed_result(event_id, exc)
 
 
 def _drain_pending() -> None:
@@ -307,6 +337,7 @@ async def _validation(_request: Request, _exc: RequestValidationError) -> JSONRe
 async def _unhandled(_request: Request, exc: Exception) -> JSONResponse:
     if isinstance(exc, StarletteHTTPException):
         return await _http_exc(_request, exc)
+    log.exception("unhandled %s", type(exc).__name__)
     return JSONResponse(status_code=500, content={"detail": {"code": "INTERNAL", "message": "internal error"}})
 
 

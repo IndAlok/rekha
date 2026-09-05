@@ -71,6 +71,12 @@ def cmd_seed() -> int:
             {
                 "event": "payment.failed",
                 "payload": {
+                    "customer": {
+                        "id": "cust_demo_failed",
+                        "name": "Riya",
+                        "contact": "+919800000001",
+                        "consent": True,
+                    },
                     "payment": {
                         "entity": {
                             "id": "pay_demo_failed",
@@ -82,7 +88,7 @@ def cmd_seed() -> int:
                             "error_source": "customer",
                             "order_id": "order_demo",
                         }
-                    }
+                    },
                 },
             },
             indent=2,

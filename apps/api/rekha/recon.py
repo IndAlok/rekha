@@ -25,39 +25,40 @@ class ReconciliationGuard:
         self.payments = payments
 
     def check(self, case: dict) -> ReconResult:
+        try:
+            return self._check(case)
+        except Exception:  # noqa: BLE001
+            return ReconResult(False, "unknown", "recon_error", unknown=True)
+
+    def _check(self, case: dict) -> ReconResult:
         refs = case.get("source_refs") or {}
+        live = case.get("live_statuses") or {}
         if case.get("already_paid"):
             return ReconResult(True, "paid", "case_flag")
-        payment_id = refs.get("payment_id")
-        if payment_id:
-            payment, failed = self._fetch("payment", payment_id)
+        unpaid = False
+        for kind, ref_key, live_key in (
+            ("payment", "payment_id", "payment"),
+            ("order", "order_id", "order"),
+            ("invoice", "invoice_id", "invoice"),
+            ("payment_link", "payment_link_id", "payment_link"),
+        ):
+            entity_id = refs.get(ref_key)
+            if not entity_id:
+                continue
+            entity, failed = self._fetch(kind, entity_id)
+            webhook_status = live.get(live_key)
             if failed:
-                return ReconResult(False, "unknown", "payment_fetch_failed", unknown=True)
-            status = (payment or {}).get("status", "unknown")
+                if webhook_status in PAID_STATES:
+                    return ReconResult(True, str(webhook_status), f"{kind}_webhook")
+                if webhook_status or unpaid:
+                    unpaid = True
+                    continue
+                return ReconResult(False, "unknown", f"{kind}_fetch_failed", unknown=True)
+            status = (entity or {}).get("status") or "unknown"
             if status in PAID_STATES:
-                return ReconResult(True, status, "payment")
-        order_id = refs.get("order_id")
-        if order_id:
-            order, failed = self._fetch("order", order_id)
-            if failed:
-                return ReconResult(False, "unknown", "order_fetch_failed", unknown=True)
-            status = (order or {}).get("status")
-            if status in PAID_STATES:
-                return ReconResult(True, status, "order")
-        invoice_id = refs.get("invoice_id")
-        if invoice_id:
-            inv, failed = self._fetch("invoice", invoice_id)
-            if failed:
-                return ReconResult(False, "unknown", "invoice_fetch_failed", unknown=True)
-            if (inv or {}).get("status") in PAID_STATES:
-                return ReconResult(True, inv["status"], "invoice")
-        link_id = refs.get("payment_link_id")
-        if link_id:
-            link, failed = self._fetch("payment_link", link_id)
-            if failed:
-                return ReconResult(False, "unknown", "payment_link_fetch_failed", unknown=True)
-            if (link or {}).get("status") in PAID_STATES:
-                return ReconResult(True, link["status"], "payment_link")
+                return ReconResult(True, status, kind)
+            if status != "unknown":
+                unpaid = True
         return ReconResult(False, "unpaid", "none")
 
     def deep_check(self, case: dict) -> bool:
@@ -71,13 +72,21 @@ class ReconciliationGuard:
         payment, failed = self._fetch("payment", payment_id)
         if failed or not payment:
             return False
-        acquirer = payment.get("acquirer_data") or {}
+        acquirer = payment.get("acquirer_data") or {} if isinstance(payment, dict) else {}
         if payment.get("status") in PAID_STATES and (acquirer.get("rrn") or acquirer.get("utr")):
             return True
         return bool(payment.get("settled") is True)
 
     def _fetch(self, kind: str, entity_id: str) -> tuple[dict | None, bool]:
         try:
-            return getattr(self.payments, f"fetch_{kind}")(entity_id), False
+            raw = getattr(self.payments, f"fetch_{kind}")(entity_id)
         except Exception:  # noqa: BLE001
+            return None, True
+        if raw is None:
+            return None, False
+        if isinstance(raw, dict):
+            return raw, False
+        try:
+            return dict(raw), False
+        except (TypeError, ValueError):
             return None, True
