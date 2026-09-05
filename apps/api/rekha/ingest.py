@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
 from rekha.config import settings
+from rekha.db.time import coerce_utc
 
 # Events that mean money moved in, not out. They close cases and attribute
 # recovery. They must never open a dunning case.
@@ -163,9 +164,9 @@ def _hours_since_failure(entity: dict, payment: dict, event: dict) -> float:
         if isinstance(raw, (int, float)):
             created = datetime.fromtimestamp(float(raw), tz=UTC)
         else:
-            created = datetime.fromisoformat(str(raw))
-            if created.tzinfo is None:
-                created = created.replace(tzinfo=UTC)
+            created = coerce_utc(str(raw))
+            if created is None:
+                return 48.0
         return max(0.0, (datetime.now(UTC) - created).total_seconds() / 3600.0)
     except (TypeError, ValueError, OSError):
         return 48.0

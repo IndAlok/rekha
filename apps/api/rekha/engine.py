@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 
 from rekha import constants
 from rekha.advisor import CLOSED_TOOLS, advise, advisor_configured, filter_proposal
@@ -16,6 +16,7 @@ from rekha.clocks import (
     nach_gap_elapsed_days,
 )
 from rekha.compliance import scan_copy
+from rekha.db.time import coerce_utc
 from rekha.degradation import MONITOR
 from rekha.diagnose import diagnose
 from rekha.execute import SAFE_INTERNAL_ACTIONS, Executor
@@ -415,7 +416,9 @@ class RecoveryEngine:
                         case["promise"] = execution["promise"]
                         case["ptp_active"] = True
         elif verdict.effect == "DEFER" and self.persist and verdict.defer_until:
-            run_at = datetime.fromisoformat(verdict.defer_until)
+            run_at = _parse_dt(verdict.defer_until)
+            if run_at is None:
+                raise ValueError("invalid defer_until")
             job_id = self._store.JobStore.schedule("deferred", case, run_at)
             scheduled = True
             self._audit("deferred_scheduled", case, {"job_id": job_id, "run_at": verdict.defer_until})
@@ -726,18 +729,10 @@ class RecoveryEngine:
 
 
 def _parse_dt(raw) -> datetime | None:
-    if raw is None:
+    try:
+        return coerce_utc(raw)
+    except (TypeError, ValueError):
         return None
-    if isinstance(raw, datetime):
-        ts = raw
-    else:
-        try:
-            ts = datetime.fromisoformat(str(raw))
-        except ValueError:
-            return None
-    if ts.tzinfo is None:
-        ts = ts.replace(tzinfo=UTC)
-    return ts
 
 
 def _deny_verdict(reason: str) -> Verdict:

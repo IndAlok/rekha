@@ -23,6 +23,7 @@ from rekha.db.models import (
     WebhookInbox,
 )
 from rekha.db.session import get_session, session_scope
+from rekha.db.time import as_utc, coerce_utc
 
 JOB_LEASE_SECONDS = 60
 JOB_MAX_ATTEMPTS = 3
@@ -37,28 +38,29 @@ def _now() -> datetime:
 
 
 def _as_utc(ts: datetime) -> datetime:
-    """psycopg3 rejects naive datetimes on timestamptz columns."""
-    if ts.tzinfo is None:
-        return ts.replace(tzinfo=UTC)
-    return ts.astimezone(UTC)
+    return as_utc(ts)
 
 
 def _aware(ts: datetime | None) -> datetime | None:
     """SQLite returns naive datetimes regardless of DateTime(timezone=True)."""
     if ts is None:
         return None
-    return ts if ts.tzinfo else ts.replace(tzinfo=UTC)
+    return as_utc(ts)
 
 
 def _iso(ts: datetime | None) -> str | None:
     return ts.isoformat() if ts else None
 
 
-def _from_iso(raw: str | None) -> datetime | None:
-    if not raw:
+def _from_iso(raw) -> datetime | None:
+    try:
+        return coerce_utc(raw)
+    except (TypeError, ValueError):
         return None
-    ts = datetime.fromisoformat(raw)
-    return ts if ts.tzinfo else ts.replace(tzinfo=UTC)
+
+
+def db_json(value) -> str:
+    return json.dumps(value, default=str).replace("\x00", "")
 
 
 class PersistentInbox:
@@ -79,7 +81,7 @@ class PersistentInbox:
                 event_id=event_id,
                 event_type=event_type,
                 received_at=_now(),
-                payload_json=json.dumps(payload, default=str),
+                payload_json=db_json(payload),
             )
             session.add(row)
             try:
@@ -95,8 +97,8 @@ class PersistentInbox:
             if row is None:
                 return
             row.processed = True
-            row.error_text = error
-            row.result_json = json.dumps(result, default=str) if result else None
+            row.error_text = error.replace("\x00", "") if error else None
+            row.result_json = db_json(result) if result else None
 
     def pending(self) -> list[dict]:
         with session_scope() as session:
@@ -188,7 +190,7 @@ class PersistentIdempotency:
                 row = IdempotencyKey(key=key, lock_expires_at=_now() + timedelta(seconds=self.LEASE_SECONDS))
                 session.add(row)
             row.state = state
-            row.result_json = json.dumps(result, default=str) if result is not None else None
+            row.result_json = db_json(result) if result is not None else None
 
 
 class PersistentReservations:
@@ -276,7 +278,7 @@ class PersistentAuditSink:
                     action=str(row.get("action", "")),
                     policy_version=str(row.get("policy_version", "")),
                     policy_hash=str(row.get("policy_hash", "")),
-                    payload_json=json.dumps(row, default=str),
+                    payload_json=db_json(row),
                 )
             )
 
@@ -385,7 +387,7 @@ class CaseStore:
             if channel:
                 q = q.where(CaseContact.channel == channel)
             rows = session.scalars(q).all()
-        since_a = _aware(since) or since
+        since_a = as_utc(since)
         n = 0
         for r in rows:
             ts = _aware(r.contacted_at)
@@ -411,7 +413,7 @@ class CaseStore:
 
     @staticmethod
     def hours_since_failure(case_id: str, now: datetime | None = None) -> float | None:
-        now = now or _now()
+        now = as_utc(now or _now())
         with get_session() as session:
             row = session.get(RecoveryCase, case_id)
             if row is None or row.first_failed_at is None:
@@ -419,14 +421,7 @@ class CaseStore:
             start = _aware(row.first_failed_at)
             if start is None:
                 return None
-            try:
-                return max(0.0, (now - start).total_seconds() / 3600.0)
-            except TypeError:
-                aware_now = _aware(now) or _now()
-                aware_start = _aware(start)
-                if aware_start is None:
-                    return None
-                return max(0.0, (aware_now - aware_start).total_seconds() / 3600.0)
+            return max(0.0, (now - start).total_seconds() / 3600.0)
 
     @staticmethod
     def close(case_id: str, *, recovered: bool, source: str, stop_reason: str | None = None) -> None:
@@ -463,7 +458,7 @@ class CaseStore:
         with session_scope() as session:
             row = session.get(RecoveryCase, case["id"])
             if row is not None:
-                row.payload_json = json.dumps(
+                row.payload_json = db_json(
                     {
                         k: case.get(k)
                         for k in (
@@ -477,7 +472,6 @@ class CaseStore:
                             "consent_status",
                         )
                     },
-                    default=str,
                 )
 
     @staticmethod
@@ -610,9 +604,9 @@ class ApprovalStore:
                     id=approval_id,
                     case_id=case["id"],
                     approver_role=approver_role,
-                    proposal_json=json.dumps(proposal, default=str),
-                    verdict_json=json.dumps(verdict, default=str),
-                    case_json=json.dumps(case, default=str),
+                    proposal_json=db_json(proposal),
+                    verdict_json=db_json(verdict),
+                    case_json=db_json(case),
                     expires_at=_now() + timedelta(days=ApprovalStore.TIMEOUT_DAYS),
                 )
             )
@@ -685,23 +679,18 @@ class JobStore:
     def schedule(kind: str, case: dict, run_at: datetime) -> int:
         when = _as_utc(run_at)
         with session_scope() as session:
-            row = ScheduledJob(kind=kind, case_id=case["id"], run_at=when, case_json=json.dumps(case, default=str))
+            row = ScheduledJob(kind=kind, case_id=case["id"], run_at=when, case_json=db_json(case))
             session.add(row)
             session.flush()
             return row.id
 
     @staticmethod
-    def _reclaim_stale(session, naive_now: datetime) -> None:
-        now_a = naive_now.replace(tzinfo=UTC) if naive_now.tzinfo is None else naive_now
+    def _reclaim_stale(session, now: datetime) -> None:
+        now_a = as_utc(now)
         rows = session.scalars(select(ScheduledJob).where(ScheduledJob.status == "running")).all()
         for row in rows:
             exp = _aware(row.lease_expires_at)
-            if exp is None:
-                expired = True
-            else:
-                if exp.tzinfo is None:
-                    exp = exp.replace(tzinfo=UTC)
-                expired = exp <= now_a
+            expired = exp is None or exp <= now_a
             if not expired:
                 continue
             if row.attempts >= JOB_MAX_ATTEMPTS:
@@ -724,8 +713,6 @@ class JobStore:
                 run_at = _aware(row.run_at)
                 if run_at is None:
                     continue
-                if run_at.tzinfo is None:
-                    run_at = run_at.replace(tzinfo=UTC)
                 if run_at <= now_a:
                     due_rows.append(row)
                 if len(due_rows) >= limit:
@@ -752,7 +739,7 @@ class JobStore:
             if row is None:
                 return
             row.attempts += 1
-            row.result_json = json.dumps(result, default=str) if result else None
+            row.result_json = db_json(result) if result else None
             row.lease_expires_at = None
             if status == "failed" and row.attempts < JOB_MAX_ATTEMPTS:
                 row.status = "pending"
@@ -822,23 +809,22 @@ class RuntimeKVStore:
         with session_scope() as session:
             row = session.get(RuntimeKV, key)
             if row is None:
-                session.add(RuntimeKV(key=key, value_json=json.dumps(value, default=str)))
+                session.add(RuntimeKV(key=key, value_json=db_json(value)))
             else:
-                row.value_json = json.dumps(value, default=str)
+                row.value_json = db_json(value)
                 row.updated_at = _now()
 
 
 class ComplaintStore:
     @staticmethod
     def record(customer_id: str, when: datetime | None = None, source: str = "api") -> None:
-        ts = when.astimezone(UTC) if when and when.tzinfo else (when or _now())
+        ts = as_utc(when) if when is not None else _now()
         with session_scope() as session:
             session.add(Complaint(customer_id=customer_id, recorded_at=ts, source=source))
 
     @staticmethod
     def throttled(customer_id: str, now: datetime, window_days: int = COMPLAINT_WINDOW_DAYS, threshold: int = COMPLAINT_THRESHOLD) -> bool:
-        cutoff = (now if now.tzinfo else now.replace(tzinfo=UTC)) - timedelta(days=window_days)
-        cutoff_a = cutoff.astimezone(UTC) if cutoff.tzinfo else cutoff.replace(tzinfo=UTC)
+        cutoff_a = as_utc(now) - timedelta(days=window_days)
         with get_session() as session:
             rows = session.scalars(select(Complaint).where(Complaint.customer_id == customer_id)).all()
         recent = [r for r in rows if (_aware(r.recorded_at) or _now()) >= cutoff_a]
@@ -846,7 +832,7 @@ class ComplaintStore:
 
     @staticmethod
     def state(customer_id: str | None = None, now: datetime | None = None) -> dict:
-        now = now or _now()
+        now = as_utc(now or _now())
         cutoff = now - timedelta(days=COMPLAINT_WINDOW_DAYS)
         with get_session() as session:
             q = select(Complaint)
@@ -892,7 +878,7 @@ class ConsentStore:
         if row is None:
             return None
         view = ConsentStore._as_dict(row)
-        now = now or _now()
+        now = as_utc(now or _now())
         withdrawn = _aware(row.consent_withdrawn_at)
         if withdrawn is not None:
             silence_until = withdrawn + timedelta(days=CONSENT_SILENCE_DAYS)
@@ -971,7 +957,7 @@ class PromiseStore:
                 promised_amount_paise=int(amount_paise),
                 promised_date=promised_date,
                 state="Open",
-                payload_json=json.dumps(payload, default=str),
+                payload_json=db_json(payload),
             )
             session.add(row)
         return PromiseStore.get(pid) or {}
@@ -1001,7 +987,7 @@ class PromiseStore:
             if extra:
                 payload = json.loads(row.payload_json or "{}")
                 payload.update(extra)
-                row.payload_json = json.dumps(payload, default=str)
+                row.payload_json = db_json(payload)
             return PromiseStore._as_dict(row)
 
     @staticmethod

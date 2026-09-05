@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, DateTime, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+from rekha.db.types import TzDateTime
 
 
 def utcnow() -> datetime:
@@ -27,8 +29,8 @@ class Customer(Base):
     merchant_id: Mapped[str] = mapped_column(String)
     language: Mapped[str] = mapped_column(String, default="en-IN")
     consent_status: Mapped[str] = mapped_column(String, default="UNKNOWN")
-    consent_changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    consent_withdrawn_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    consent_changed_at: Mapped[datetime | None] = mapped_column(TzDateTime(), nullable=True)
+    consent_withdrawn_at: Mapped[datetime | None] = mapped_column(TzDateTime(), nullable=True)
     opt_out: Mapped[bool] = mapped_column(Boolean, default=False)
     dnd: Mapped[bool] = mapped_column(Boolean, default=False)
     legal_hold: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -53,17 +55,17 @@ class RecoveryCase(Base):
     parent_case_id: Mapped[str | None] = mapped_column(String, nullable=True)
     mandate_attempts_used: Mapped[int] = mapped_column(Integer, default=0)
     nach_representations_used: Mapped[int] = mapped_column(Integer, default=0)
-    first_failed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    first_failed_at: Mapped[datetime | None] = mapped_column(TzDateTime(), nullable=True)
     payload_json: Mapped[str] = mapped_column(Text, default="{}")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(TzDateTime(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(TzDateTime(), default=utcnow)
 
 
 class WebhookInbox(Base):
     __tablename__ = "webhook_inbox"
     event_id: Mapped[str] = mapped_column(String, primary_key=True)
     event_type: Mapped[str] = mapped_column(String)
-    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    received_at: Mapped[datetime] = mapped_column(TzDateTime())
     payload_json: Mapped[str] = mapped_column(Text)
     processed: Mapped[bool] = mapped_column(Boolean, default=False)
     error_text: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -75,8 +77,8 @@ class IdempotencyKey(Base):
     key: Mapped[str] = mapped_column(String, primary_key=True)
     state: Mapped[str] = mapped_column(String, default="IN_FLIGHT")  # IN_FLIGHT | SUCCEEDED | FAILED
     result_json: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    lock_expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(TzDateTime(), default=utcnow)
+    lock_expires_at: Mapped[datetime] = mapped_column(TzDateTime())
 
 
 class ContactReservationRow(Base):
@@ -86,7 +88,7 @@ class ContactReservationRow(Base):
     window_bucket: Mapped[str] = mapped_column(String)
     channel: Mapped[str] = mapped_column(String)
     confirmed: Mapped[bool] = mapped_column(Boolean, default=False)
-    lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    lease_expires_at: Mapped[datetime | None] = mapped_column(TzDateTime(), nullable=True)
     __table_args__ = (UniqueConstraint("customer_id", "window_bucket", "channel", name="uq_contact_slot"),)
 
 
@@ -95,7 +97,7 @@ class AuditRow(Base):
     seq: Mapped[int] = mapped_column(Integer, primary_key=True)
     prev_hash: Mapped[str] = mapped_column(String)
     entry_hash: Mapped[str] = mapped_column(String, unique=True)
-    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    occurred_at: Mapped[datetime] = mapped_column(TzDateTime())
     actor: Mapped[str] = mapped_column(String, default="rekha.engine")
     case_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
     action: Mapped[str] = mapped_column(String)
@@ -113,8 +115,8 @@ class PromiseRow(Base):
     promised_date: Mapped[str] = mapped_column(String)
     state: Mapped[str] = mapped_column(String, default="Open")
     payload_json: Mapped[str] = mapped_column(Text, default="{}")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(TzDateTime(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(TzDateTime(), default=utcnow)
 
 
 class ScheduledJob(Base):
@@ -122,13 +124,13 @@ class ScheduledJob(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     kind: Mapped[str] = mapped_column(String)  # deferred | send_after | approval_timeout_check
     case_id: Mapped[str] = mapped_column(String, index=True)
-    run_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    run_at: Mapped[datetime] = mapped_column(TzDateTime(), index=True)
     status: Mapped[str] = mapped_column(String, default="pending")  # pending | running | done | cancelled | failed
     attempts: Mapped[int] = mapped_column(Integer, default=0)
-    lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    lease_expires_at: Mapped[datetime | None] = mapped_column(TzDateTime(), nullable=True)
     case_json: Mapped[str] = mapped_column(Text, default="{}")
     result_json: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(TzDateTime(), default=utcnow)
 
 
 class Approval(Base):
@@ -141,9 +143,9 @@ class Approval(Base):
     proposal_json: Mapped[str] = mapped_column(Text, default="{}")
     verdict_json: Mapped[str] = mapped_column(Text, default="{}")
     case_json: Mapped[str] = mapped_column(Text, default="{}")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(TzDateTime(), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(TzDateTime())
+    decided_at: Mapped[datetime | None] = mapped_column(TzDateTime(), nullable=True)
 
 
 class RecoveryLedgerRow(Base):
@@ -155,7 +157,7 @@ class RecoveryLedgerRow(Base):
     intervention_channel: Mapped[str | None] = mapped_column(String, nullable=True)
     source_event: Mapped[str] = mapped_column(String)
     amount_paise: Mapped[int] = mapped_column(Integer)
-    recovered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    recovered_at: Mapped[datetime] = mapped_column(TzDateTime())
     attribution: Mapped[str] = mapped_column(String, default="agent")  # agent | self_cure
 
 
@@ -163,7 +165,7 @@ class RuntimeKV(Base):
     __tablename__ = "runtime_kv"
     key: Mapped[str] = mapped_column(String, primary_key=True)
     value_json: Mapped[str] = mapped_column(Text)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(TzDateTime(), default=utcnow)
 
 
 class ChargeGuard(Base):
@@ -173,7 +175,7 @@ class ChargeGuard(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     case_id: Mapped[str] = mapped_column(String)
     attempt_no: Mapped[int] = mapped_column(Integer)
-    captured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    captured_at: Mapped[datetime] = mapped_column(TzDateTime(), default=utcnow)
     amount_paise: Mapped[int] = mapped_column(Integer)
     __table_args__ = (UniqueConstraint("case_id", "attempt_no", name="uq_charge_per_attempt"),)
 
@@ -185,7 +187,7 @@ class Complaint(Base):
     __tablename__ = "complaints"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     customer_id: Mapped[str] = mapped_column(String, index=True)
-    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    recorded_at: Mapped[datetime] = mapped_column(TzDateTime(), default=utcnow)
     source: Mapped[str] = mapped_column(String, default="api")
 
 
@@ -198,4 +200,4 @@ class CaseContact(Base):
     case_id: Mapped[str] = mapped_column(String, index=True)
     customer_id: Mapped[str] = mapped_column(String, index=True)
     channel: Mapped[str] = mapped_column(String)
-    contacted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    contacted_at: Mapped[datetime] = mapped_column(TzDateTime(), default=utcnow)
