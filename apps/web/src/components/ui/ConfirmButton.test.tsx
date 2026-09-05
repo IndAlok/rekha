@@ -15,4 +15,14 @@ describe("ConfirmButton", () => {
     expect(await screen.findByRole("button", { name: "Do" })).toBeInTheDocument()
     expect(onConfirm).toHaveBeenCalledOnce()
   })
+
+  test("Escape disarms", async () => {
+    const user = userEvent.setup()
+    render(<ConfirmButton onConfirm={vi.fn()}>Arm</ConfirmButton>)
+    await user.click(screen.getByRole("button", { name: "Arm" }))
+    expect(screen.getByRole("button", { name: "Confirm" })).toBeInTheDocument()
+    await user.keyboard("{Escape}")
+    expect(screen.getByRole("button", { name: "Arm" })).toBeInTheDocument()
+  })
 })
+
