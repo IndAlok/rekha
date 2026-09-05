@@ -2,6 +2,18 @@
 
 Bounded recovery. Every rupee explained.
 
+<p align="center">
+  <a href="https://youtu.be/ZUb4OaI-YNc" title="Watch Rekha on YouTube">
+    <img src="https://img.youtube.com/vi/ZUb4OaI-YNc/maxresdefault.jpg" alt="Rekha, bounded recovery, Razorpay test-mode" width="720" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://youtu.be/ZUb4OaI-YNc">
+    <img src="https://img.shields.io/badge/YouTube-Watch_the_desk-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube" />
+  </a>
+</p>
+
 The model never moves money. On live cases Groq may write a reason if it agrees with the playbook. YAML policy says ALLOW, DENY, DEFER, or REQUIRE_APPROVAL. A scheduler runs each action once. A hash chain stores why. Eval runs with the model off.
 
 Built for the [Razorpay AI Buildathon](https://razorpay.com/buildathon/). Test-mode only. No live payment keys. No real customer data.
