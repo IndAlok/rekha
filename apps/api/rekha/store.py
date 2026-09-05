@@ -36,6 +36,13 @@ def _now() -> datetime:
     return datetime.now(UTC)
 
 
+def _as_utc(ts: datetime) -> datetime:
+    """psycopg3 rejects naive datetimes on timestamptz columns."""
+    if ts.tzinfo is None:
+        return ts.replace(tzinfo=UTC)
+    return ts.astimezone(UTC)
+
+
 def _aware(ts: datetime | None) -> datetime | None:
     """SQLite returns naive datetimes regardless of DateTime(timezone=True)."""
     if ts is None:
@@ -676,9 +683,9 @@ class ApprovalStore:
 class JobStore:
     @staticmethod
     def schedule(kind: str, case: dict, run_at: datetime) -> int:
-        naive = run_at.astimezone(UTC).replace(tzinfo=None)
+        when = _as_utc(run_at)
         with session_scope() as session:
-            row = ScheduledJob(kind=kind, case_id=case["id"], run_at=naive, case_json=json.dumps(case, default=str))
+            row = ScheduledJob(kind=kind, case_id=case["id"], run_at=when, case_json=json.dumps(case, default=str))
             session.add(row)
             session.flush()
             return row.id
@@ -705,11 +712,10 @@ class JobStore:
 
     @staticmethod
     def due(now: datetime, limit: int = 20) -> list[dict]:
-        now_a = now if now.tzinfo else now.replace(tzinfo=UTC)
-        naive_now = now_a.astimezone(UTC).replace(tzinfo=None)
-        lease = naive_now + timedelta(seconds=JOB_LEASE_SECONDS)
+        now_a = _as_utc(now)
+        lease = now_a + timedelta(seconds=JOB_LEASE_SECONDS)
         with session_scope() as session:
-            JobStore._reclaim_stale(session, naive_now)
+            JobStore._reclaim_stale(session, now_a)
             rows = session.scalars(
                 select(ScheduledJob).where(ScheduledJob.status == "pending").order_by(ScheduledJob.run_at)
             ).all()

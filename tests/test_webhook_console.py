@@ -118,3 +118,5 @@ def test_process_crash_is_fail_closed_200(monkeypatch):
         result = res.json()["result"]
         assert result["verdict"]["reason_code"] == "PROCESS_ERROR"
         assert result["blocked"] is True
+        assert "RuntimeError" in result["notes"]
+        assert any("store down" in str(n) for n in result["notes"])

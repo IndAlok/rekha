@@ -163,6 +163,11 @@ def _ensure_latest(*, run_if_missing: bool) -> dict:
 
 
 def _fail_closed_result(event_id: str, exc: BaseException) -> dict:
+    detail = str(exc).split("\n")[0].strip()[:180]
+    notes = [type(exc).__name__]
+    lowered = detail.lower()
+    if detail and "password" not in lowered and "secret" not in lowered:
+        notes.append(detail)
     return {
         "case_id": f"evt-{event_id}",
         "strategy": "rekha",
@@ -184,7 +189,7 @@ def _fail_closed_result(event_id: str, exc: BaseException) -> dict:
         "deferred": False,
         "scheduled": False,
         "execution": None,
-        "notes": [type(exc).__name__],
+        "notes": notes,
     }
 
 

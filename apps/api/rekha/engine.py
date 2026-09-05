@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from rekha import constants
 from rekha.advisor import CLOSED_TOOLS, advise, advisor_configured, filter_proposal
@@ -729,11 +729,15 @@ def _parse_dt(raw) -> datetime | None:
     if raw is None:
         return None
     if isinstance(raw, datetime):
-        return raw
-    try:
-        return datetime.fromisoformat(str(raw))
-    except ValueError:
-        return None
+        ts = raw
+    else:
+        try:
+            ts = datetime.fromisoformat(str(raw))
+        except ValueError:
+            return None
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=UTC)
+    return ts
 
 
 def _deny_verdict(reason: str) -> Verdict:

@@ -69,6 +69,28 @@ def test_scheduler_fires_due_job():
     assert touches >= 1
 
 
+def test_schedule_keeps_ist_instant():
+    from rekha.db.models import ScheduledJob
+    from rekha.db.session import get_session
+    from rekha.store import _as_utc, _aware
+
+    init_db()
+    when = datetime(2026, 9, 10, 14, 0, tzinfo=IST)
+    job_id = JobStore.schedule("send_after", {"id": "c-tz-1"}, when)
+    assert _as_utc(when) == datetime(2026, 9, 10, 8, 30, tzinfo=UTC)
+    with get_session() as session:
+        row = session.get(ScheduledJob, job_id)
+    stored = _aware(row.run_at)
+    assert stored is not None
+    assert stored.astimezone(UTC) == when.astimezone(UTC)
+    listed = JobStore.get(job_id)
+    assert listed is not None
+    parsed = datetime.fromisoformat(listed["run_at"])
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    assert parsed.astimezone(UTC) == when.astimezone(UTC)
+
+
 def test_approval_flow_end_to_end():
     with _client() as client:
         # High-value voice case -> REQUIRE_APPROVAL -> approval row.
