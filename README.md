@@ -4,7 +4,7 @@ Bounded recovery. Every rupee explained.
 
 <p align="center">
   <a href="https://youtu.be/ZUb4OaI-YNc" title="Watch Rekha on YouTube">
-    <img src="https://img.youtube.com/vi/ZUb4OaI-YNc/maxresdefault.jpg" alt="Rekha, bounded recovery, Razorpay test-mode" width="720" />
+    <img src="https://img.youtube.com/vi/ZUb4OaI-YNc/maxresdefault.jpg" alt="Rekha, bounded recovery, Razorpay test-mode" width="1280" />
   </a>
 </p>
 
